@@ -140,5 +140,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Users
 AUTH_USER_MODEL = 'userapp.User'
 
+# media
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# saloonapp settings
+WORKDAY_START = env.time('WORKDAY_START')
+WORKDAY_END = env.time('WORKDAY_END')
+NOTE_INTERVAL_IN_MINUTES = env.int('NOTE_INTERVAL_IN_MINUTES')

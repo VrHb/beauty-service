@@ -16,6 +16,7 @@ class Saloon(models.Model):
     address = models.CharField('адрес', max_length=200)
     city = models.CharField('город', max_length=100)
     avatar = models.FileField('заглавное фото салона', validators=[validate_svg_file_extension], null=True, blank=True)
+    masters = models.ManyToManyField('Master', through='SaloonMaster')
 
     class Meta:
         verbose_name = 'салон красоты'
@@ -110,6 +111,39 @@ class Master(models.Model):
         return f'{self.speciality} {self.first_name} {self.last_name}'
 
 
+class SaloonMaster(models.Model):
+    saloon = models.ForeignKey(Saloon, related_name='masterlinks', on_delete=models.CASCADE)
+    master = models.ForeignKey(Master, related_name='saloonlinks', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'расписание мастера по дням недели'
+        verbose_name_plural = 'расписания мастера по дням недели'
+
+    def __str__(self):
+        return f'{self.saloon} {self.master}'
+
+
+class SaloonMasterWeekday(models.Model):
+    class IsoWeekdays(models.TextChoices):
+        MONDAY = 1
+        TUESDAY = 2
+        WEDNESDAY = 3
+        THURSDAY = 4
+        FRIDAY = 5
+        SATURDAY = 6
+        SUNDAY = 7
+
+    isoweekday = models.CharField('день недели по ISO', max_length=9, choices=IsoWeekdays.choices)
+    saloonmaster = models.ForeignKey(SaloonMaster, related_name='weekdays', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'рабочий день мастера'
+        verbose_name_plural = 'рабочие дни мастера'
+
+    def __str__(self):
+        return f'{self.saloonmaster} {self.isoweekday}'
+
+
 class PaymentType(models.Model):
     name = models.CharField('название', max_length=200)
 
@@ -142,9 +176,11 @@ class Payment(models.Model):
     class Status(models.TextChoices):
         cancelled = 'Отменен'
         paid = 'Оплачен'
+        created = 'Создан'
 
     user = models.ForeignKey(User, related_name='payments', on_delete=models.DO_NOTHING)
-    created_at = models.DateTimeField('дата и время оплаты')
+    created_at = models.DateTimeField('дата и время создания счета')
+    paid_at = models.DateTimeField('дата и время платежа', null=True)
     ptype = models.ForeignKey(PaymentType, related_name='payments', on_delete=models.DO_NOTHING)
     status = models.CharField('статус платежа', max_length=10, choices=Status.choices)
 
@@ -162,14 +198,15 @@ class Payment(models.Model):
         verbose_name_plural = 'платежи'
 
     def __str__(self):
-        return f'Платеж {self.pk} {self.created_at} - {self.get_status_display}'
+        return f'Платеж {self.pk}'
 
 
 class Note(models.Model):
     user = models.ForeignKey(User, related_name='notes', on_delete=models.DO_NOTHING)
+    saloon = models.ForeignKey(Saloon, related_name='notes', on_delete=models.DO_NOTHING, null=True)
     service = models.ForeignKey(Service, related_name='notes', on_delete=models.DO_NOTHING)
     master = models.ForeignKey(Master, related_name='notes', on_delete=models.DO_NOTHING)
-    order = models.OneToOneField(Payment, on_delete=models.DO_NOTHING)
+    payment = models.OneToOneField(Payment, on_delete=models.DO_NOTHING)
     # TODO: Для отображения цен со скидкой (например 50% для первой) нужно сделать
     # менеджер, который подтянет с актуальными ценами для юзера.
     # На вход менеждеру промокод
@@ -181,3 +218,14 @@ class Note(models.Model):
         null=True,
         blank=True
     )
+    created_at = models.DateTimeField(default=timezone.now)
+    date = models.DateField('дата', null=True)
+    stime = models.TimeField('время начала', null=True)
+    etime = models.TimeField('время окончания', null=True)
+
+    class Meta:
+        verbose_name = 'запись'
+        verbose_name_plural = 'записи'
+
+    def __str__(self):
+        return f'{self.pk} - {self.saloon}, {self.master}, {self.service}'
