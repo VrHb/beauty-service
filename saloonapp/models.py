@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+from .validators import validate_svg_file_extension
+
 User = get_user_model()
 
 
@@ -12,7 +14,7 @@ class Saloon(models.Model):
     name = models.CharField('название', max_length=100)
     address = models.CharField('адрес', max_length=200)
     city = models.CharField('город', max_length=100)
-    avatar = models.ImageField('заглавное фото салона', null=True, blank=True)
+    avatar = models.FileField('заглавное фото салона', validators=[validate_svg_file_extension], null=True, blank=True)
 
     class Meta:
         verbose_name = 'салон красоты'
@@ -38,7 +40,7 @@ class ServiceGroup(models.Model):
 # service filter: через ServiceGroup
 class Service(models.Model):
     name = models.CharField('название', max_length=200)
-    avatar = models.ImageField('заглавное фото услуги', null=True, blank=True)
+    avatar = models.FileField('заглавное фото услуги', validators=[validate_svg_file_extension], null=True, blank=True)
     price = models.DecimalField('цена', max_digits=7, decimal_places=2, validators=[MinValueValidator(0)])
     order = models.IntegerField('порядок отображения внутри группы', help_text='чем меньше число, тем раньше')
     group = models.ForeignKey(ServiceGroup, related_name='services', on_delete=models.PROTECT)
@@ -77,7 +79,7 @@ class Master(models.Model):
         help_text='Хардкод пока нет реальных отзывов'
     )
     review_count = models.PositiveSmallIntegerField('количество отзывов', help_text='Хардкод пока нет реальных отзывов')
-    avatar = models.ImageField('фото мастера', null=True, blank=True)
+    avatar = models.FileField('фото мастера', validators=[validate_svg_file_extension], null=True, blank=True)
     start_experience_date = models.DateField('дата начала рабочего стажа', help_text='для расчета стажа')
     speciality = models.ForeignKey(MasterSpeciality, related_name='masters', on_delete=models.PROTECT)
     services = models.ManyToManyField(Service)
