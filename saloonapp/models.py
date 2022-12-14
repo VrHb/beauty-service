@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 
 from .validators import validate_svg_file_extension
 
@@ -72,10 +73,12 @@ class MasterSpeciality(models.Model):
 # service filter: as is
 class Master(models.Model):
     first_name = models.CharField('имя мастера', max_length=100)  # if no user
-    last_name = models.CharField('имя мастера', max_length=100)  # if no user
-    rating = models.FloatField(
-        'оценка',
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    last_name = models.CharField('фамилия мастера', max_length=100)  # if no user
+    rating_image = models.FileField(
+        'картинка оценки',
+        validators=[validate_svg_file_extension],
+        null=True,
+        blank=True,
         help_text='Хардкод пока нет реальных отзывов'
     )
     review_count = models.PositiveSmallIntegerField('количество отзывов', help_text='Хардкод пока нет реальных отзывов')
@@ -87,6 +90,17 @@ class Master(models.Model):
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    @property
+    def work_experience(self):
+        # TODO: сделать точнее
+        experience = (timezone.now().date() - self.start_experience_date)
+        years = experience.days // 365
+        if years:
+            months = (experience.days % years) // 30
+            return f'{years} г. {months} мес.'
+        months = experience.days // 30
+        return f'{months} мес.'
 
     class Meta:
         verbose_name = 'мастер'

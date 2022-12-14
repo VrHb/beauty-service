@@ -31,6 +31,8 @@ DEBUG = env.bool('DEBUG', False)
 
 ALLOWED_HOSTS = env.list('HOSTS', [])
 
+INTERNAL_IPS = env.list('INTERNAL_IPS', [])
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'phonenumber_field',
+    'debug_toolbar',
     'userapp',
     'saloonapp',
 ]
@@ -53,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'beauty_city.urls'
@@ -124,7 +128,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
-
 
 
 STATIC_URL = f'/{env.str("STATIC_DIR_NAME")}/'
