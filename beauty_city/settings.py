@@ -147,4 +147,6 @@ MEDIA_URL = '/media/'
 # saloonapp settings
 WORKDAY_START = env.time('WORKDAY_START')
 WORKDAY_END = env.time('WORKDAY_END')
+if WORKDAY_END < WORKDAY_START:
+    raise ValueError('WORKDAY_END should be less then WORKDAY_START')
 NOTE_INTERVAL_IN_MINUTES = env.int('NOTE_INTERVAL_IN_MINUTES')
