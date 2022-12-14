@@ -23,7 +23,7 @@
 					<div class="row">
 						<div class="col-4 col-md-3">
 							<a href="/">
-                <img src="{% static 'img/Logo.svg' %}" alt="Logo" class="logo header__logo">
+                <img src="{% static "img/Logo.svg" %}" alt="Logo" class="logo header__logo">
 							</a>
 						</div>
 						<div class="col-3 col-md-2">
@@ -61,11 +61,11 @@
 			<div class="header">
 				<div class="row">
 					<div class="col-2 col-md-2 mob">
-						<img src="img/hamburger.svg" alt="hamburger" class="header__mobMenu">
+            <img src="{% static "img/hamburger.svg" %}" alt="hamburger" class="header__mobMenu">
 					</div>
 					<div class="col-5 col-md-3 col-lg-2">
 						<a href="/">
-							<img src="img/Logo.svg" alt="Logo" class="logo header__logo">
+              <img src="{% static "img/Logo.svg" %}" alt="Logo" class="logo header__logo">
 						</a>
 					</div>
 					<div class="col-md-5 ">
@@ -82,7 +82,7 @@
 						<div class="header__block">
 						<a href="tel:+79179023800"><button class="header__block_btn">Перезвоните мне</button></a>
 						<div class="header__block_auth">
-							<img src="img/acc.svg" alt="account" class="header__account_img">
+              <img src="{% static "img/acc.svg" %}" alt="account" class="header__account_img">
 							<span class="header__block_auth__intro">Войти</span>
 						</div>
 					</div>
@@ -102,7 +102,7 @@
 						<div class="banner__block">
 							<h1 class="banner__title">Запишись на первую услугу со <span class="yellow banner__title_discount">скидкой 50%</span></h1>
 							<div class="banner__elems">
-								<img src="img/persons.svg" alt="persons" class="banner__elems_img">
+                <img src="{% static "img/persons.svg" %}" alt="persons" class="banner__elems_img">
 								<p class="banner__elems_intro">
 									<span class="yellow banner__elems_over">Более 1 000</span>
 									довольных клиентов
@@ -112,7 +112,7 @@
 						</div>
 					</div>
 					<div class="col-md-12 col-lg-5">
-						<img src="img/bannerImg.svg" alt="bannerImg" class="banner__img">
+            <img src="{% static "img/bannerImg.svg" %}" alt="bannerImg" class="banner__img">
 					</div>
 				</div>
 			</div>
@@ -134,43 +134,17 @@
 				</div>
 				<div class="title dec">Наши салоны</div>
 				<div class="row salonsSlider">
-					<div class="col-6 col-md-4 col-lg-4 col-xl-3">
-						<div class="salons__block">
-							<img src="img/salons/salon1.svg" alt="salon" class="salons__block_img">
-							<div class="salons__elems">
-								<div class="block__title salons__elems_title">BeautyCity Пушкинская</div>
-								<div class="salons__elems_light">ул. Пушкинская, д. 78А</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-4 col-lg-4 col-xl-3">
-						<div class="salons__block">
-							<img src="img/salons/salon2.svg" alt="salon" class="salons__block_img">
-							<div class="salons__elems">
-								<div class="block__title salons__elems_title">BeautyCity Ленина</div>
-								<div class="salons__elems_light">ул. Ленина, д. 211</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-4 col-lg-4 col-xl-3">
-						<div class="salons__block">
-							<img src="img/salons/salon3.svg" alt="salon" class="salons__block_img">
-							<div class="salons__elems">
-								<div class="salons__elems_title">BeautyCity Красная</div>
-								<div class="salons__elems_light">ул. Красная, д. 10</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-6 col-md-4 col-lg-4 col-xl-3 decVis">
-						<div class="salons__block">
-							<img src="img/salons/salon1.svg" alt="salon" class="salons__block_img">
-							<div class="salons__elems">
-								<div class="salons__elems_title">BeautyCity Красная</div>
-								<div class="salons__elems_light">ул. Красная, д. 10</div>
-							</div>
-						</div>
-					</div>
-
+          {% for saloon in saloons %}
+            <div class="col-6 col-md-4 col-lg-4 col-xl-3">
+              <div class="salons__block">
+                <img src="{{ saloon.avatar.url }}" alt="salon" class="salons__block_img">
+                <div class="salons__elems">
+                  <div class="block__title salons__elems_title">{{ saloon.name }}</div>
+                  <div class="salons__elems_light">{{ saloon.address }}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
 				</div>
 			</div>
 		</div>
@@ -533,21 +507,21 @@
 					<div class="col-md-12 col-lg-3">
 						<div class="contacts__locationBlock">
 							<div class="contacts__location fic">
-								<img src="img/location.svg" alt="location" class="contacts__location_icon">
+                <img src="{% static "img/location.svg" %}" alt="location" class="contacts__location_icon">
 								<div class="contacts__location_info">
 									<div class="contacts__location_intro">ул. Пушкинская, д. 78А</div>
 								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
 								</div>
 							</div>
 							<div class="contacts__location fic">
-								<img src="img/location.svg" alt="location" class="contacts__location_icon">
+                <img src="{% static "img/location.svg" %}" alt="location" class="contacts__location_icon">
 								<div class="contacts__location_info">
 									<div class="contacts__location_intro">ул. Красная, д. 10</div>
 								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
 								</div>
 							</div>
 							<div class="contacts__location fic">
-								<img src="img/location.svg" alt="location" class="contacts__location_icon">
+                <img src="{% static "img/location.svg" %}" alt="location" class="contacts__location_icon">
 								<div class="contacts__location_info">
 									<div class="contacts__location_intro">ул. Ленина, д. 211</div>
 								<div class="contacts__location_date">с 10:00 до 20:00  без выходных</div>
@@ -558,10 +532,10 @@
 							<div class="contacts__social">
 								<div class="contacts__social_title">соц. сети</div>
 								<div class="contacts__social_block fic">
-									<a href=""><img src="img/wa.svg" alt="wa" class="contacts__social_icon"></a>
-									<a href=""><img src="img/vk.svg" alt="vk" class="contacts__social_icon"></a>
-									<a href=""><img src="img/tg.svg" alt="tg" class="contacts__social_icon"></a>
-									<a href=""><img src="img/insta.svg" alt="insta" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/wa.svg" %}" alt="wa" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/vk.svg" %}" alt="vk" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/tg.svg" %}" alt="tg" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/insta.svg" %}" alt="insta" class="contacts__social_icon"></a>
 								</div>
 							</div>
 							<div class="contacts__info">
@@ -588,7 +562,7 @@
 				<div class="footer__block">
 					<div class="row">
 						<div class="col-md-3 col-lg-2">
-							<a href="/"><img src="img/Logo.svg" alt="logo" class="footer__logo"></a>
+              <a href="/"><img src="{% static "img/Logo.svg" %}" alt="logo" class="footer__logo"></a>
 						</div>
 						<div class="col-md-5 minMobHide">
 							<nav>
@@ -636,10 +610,10 @@
 							</div>
 							<div class="col-md-3 col-lg-2">
 								<div class="footer__social fic">
-									<a href=""><img src="img/waGray.svg" alt="wa" class="contacts__social_icon"></a>
-									<a href=""><img src="img/vkGray.svg" alt="vk" class="contacts__social_icon"></a>
-									<a href=""><img src="img/tgGray.svg" alt="tg" class="contacts__social_icon"></a>
-									<a href=""><img src="img/instaGray.svg" alt="insta" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/waGray.svg" %}" alt="wa" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/vkGray.svg" %}" alt="vk" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/tgGray.svg" %}" alt="tg" class="contacts__social_icon"></a>
+                  <a href=""><img src="{% static "img/instaGray.svg" %}" alt="insta" class="contacts__social_icon"></a>
 								</div>
 							</div>
 						</div>
