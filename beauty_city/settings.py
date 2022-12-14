@@ -60,7 +60,7 @@ ROOT_URLCONF = 'beauty_city.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -72,6 +72,12 @@ TEMPLATES = [
         },
     },
 ]
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_DIR_NAME'))
 
 WSGI_APPLICATION = 'beauty_city.wsgi.application'
 
@@ -120,11 +126,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
-STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_DIR_NAME'))
 
 STATIC_URL = f'/{env.str("STATIC_DIR_NAME")}/'
 
