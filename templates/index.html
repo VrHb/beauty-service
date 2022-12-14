@@ -82,7 +82,11 @@
 						<div class="header__block">
 						<a href="tel:+79179023800"><button class="header__block_btn">Перезвоните мне</button></a>
 						<div class="header__block_auth">
-              <img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
+              {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="account" class="header__account_img">
+              {% else %}
+                <img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
+              {% endif %}
 							<span class="header__block_auth__intro">Войти</span>
 						</div>
 					</div>
