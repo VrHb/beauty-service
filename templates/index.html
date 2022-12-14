@@ -165,13 +165,13 @@
 				</div>
 				
 				<div class="row servicesSlider">
-          {% for service in serivces %}
+          {% for service in services %}
             <div class="col-md-3">
               <div class="cardBlock services__block">
-              <img src="{{ service.avatar.url }}" alt="service" class="services__block_img">
+                <img src="{{ service.avatar.url }}" alt="service" class="services__block_img">
                 <div class="services__elems">
-                <div class="services__elems_title">{{ service.name }}</div>
-                <div class="services__elems_light">{{ service.price }} ₽</div>
+                  <div class="services__elems_title">{{ service.name }}</div>
+                  <div class="services__elems_light">{{ service.price }} ₽</div>
                 </div>
               </div>
             </div>
