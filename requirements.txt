@@ -3,3 +3,4 @@ django-phonenumber-field==7.0.1
 environs==9.5.0
 phonenumbers==8.13.2
 Pillow==9.3.0
+django_debug_toolbar==3.8.1
