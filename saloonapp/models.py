@@ -72,10 +72,12 @@ class MasterSpeciality(models.Model):
 # service filter: as is
 class Master(models.Model):
     first_name = models.CharField('имя мастера', max_length=100)  # if no user
-    last_name = models.CharField('имя мастера', max_length=100)  # if no user
-    rating = models.FloatField(
-        'оценка',
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    last_name = models.CharField('фамилия мастера', max_length=100)  # if no user
+    rating_image = models.FileField(
+        'картинка оценки',
+        validators=[validate_svg_file_extension],
+        null=True,
+        blank=True,
         help_text='Хардкод пока нет реальных отзывов'
     )
     review_count = models.PositiveSmallIntegerField('количество отзывов', help_text='Хардкод пока нет реальных отзывов')
