@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 
 from .validators import validate_svg_file_extension
 
@@ -89,6 +90,17 @@ class Master(models.Model):
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    @property
+    def work_experience(self):
+        # TODO: сделать точнее
+        experience = (timezone.now().date() - self.start_experience_date)
+        years = experience.days // 365
+        if years:
+            months = (experience.days % years) // 30
+            return f'{years} г. {months} мес.'
+        months = experience.days // 30
+        return f'{months} мес.'
 
     class Meta:
         verbose_name = 'мастер'

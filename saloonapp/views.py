@@ -9,6 +9,6 @@ def index(request):
     context = {
         'saloons': Saloon.objects.all(),
         'services': Service.objects.all(),
-        'masters': Master.objects.all(),
+        'masters': Master.objects.select_related('speciality').all(),
     }
     return render(request, template_name='index.html', context=context)
