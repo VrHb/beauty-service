@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -22,13 +23,16 @@ def index(request):
 def notes(request):
     user = request.user
     notes = Note.objects.select_related('saloon', 'service', 'master', 'payment', 'promo').filter(user=user)
+    active_notes = notes.filter(date__gt=datetime.now())
+    past_notes = notes.filter(date__lt=datetime.now())
     total_price = Decimal(0)
     payment_ids = []
     for note in notes:
         total_price += note.payment.get_total_price()
         payment_ids.append(str(note.payment.pk))
     context = {
-        'notes': notes,
+        'active_notes': active_notes,
+        'past_notes': past_notes,
         'total': {
             'price': total_price,
             'payments': ','.join(payment_ids)
