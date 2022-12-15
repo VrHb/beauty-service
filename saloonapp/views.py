@@ -3,11 +3,16 @@ from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from rest_framework.decorators import api_view
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from .models import Saloon
 from .models import Service
 from .models import Master
 from .models import Note
+from .serializers import ServicesSerializer
+from .utils import construct_calendar_by_filters
 
 
 def index(request):
@@ -39,3 +44,17 @@ def notes(request):
         }
     }
     return render(request, template_name='notes.html', context=context)
+
+
+@api_view(['GET'])
+def services(request: Request):
+    serializer = ServicesSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+
+    calendar = construct_calendar_by_filters(
+        serializer.validated_data['date'],
+        serializer.validated_data.get('saloon', None),
+        serializer.validated_data.get('master', None),
+        serializer.validated_data.get('service', None),
+    )
+    return Response(calendar)

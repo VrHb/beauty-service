@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'phonenumber_field',
     'debug_toolbar',
+    'rest_framework',
     'userapp',
     'saloonapp',
 ]
