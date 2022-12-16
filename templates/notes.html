@@ -260,7 +260,7 @@
                         </div>
                         <div class="notes__main_block__main_elems fic">
                           <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ note.master.full_name }}</div>
-                          <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ note.date| date:'d F' }} - {{ note.stime }}</div>
+                          <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ note.date }} - {{ note.stime }}</div>
                         </div>
                       </div>
                     </div>
@@ -285,7 +285,7 @@
                         <div class="notes__main_address">{{ note.saloon.address }}</div>
                       </div>
                       {% if note.payment.is_paid %}
-                        <div class="notes__main_pay unPaid">ОПЛАЧЕНО</div>
+                        <div class="notes__main_pay payid">ОПЛАЧЕНО</div>
                       {% else %}
                         <div class="notes__main_pay unPaid">НЕОПЛАЧЕНО</div>
                       {% endif %}
@@ -308,7 +308,7 @@
                         </div>
                         <div class="notes__main_block__main_elems fic">
                           <div class="notes__main_block__main_elems__name otes__main_blockWidth">{{ note.master.full_name }}</div>
-                          <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ note.date|date:'d F' }} - {{ note.stime }}</div>
+                          <div class="notes__main_block__main_elems__date otes__main_blockWidth">{{ note.date }} - {{ note.stime }}</div>
                         </div>
                       </div>
                     </div>
