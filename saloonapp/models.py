@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 from django.utils import timezone
 
 from .validators import validate_svg_file_extension
@@ -17,6 +19,15 @@ class Saloon(models.Model):
     city = models.CharField('город', max_length=100)
     avatar = models.FileField('заглавное фото салона', validators=[validate_svg_file_extension], null=True, blank=True)
     masters = models.ManyToManyField('Master', through='SaloonMaster')
+
+    def to_dict(self):
+        return {
+            'pk': self.pk,
+            'name': self.name,
+            'address': self.address,
+            'city': self.city,
+            'avatar': self.avatar.url,
+        }
 
     class Meta:
         verbose_name = 'салон красоты'
@@ -87,6 +98,19 @@ class Master(models.Model):
     start_experience_date = models.DateField('дата начала рабочего стажа', help_text='для расчета стажа')
     speciality = models.ForeignKey(MasterSpeciality, related_name='masters', on_delete=models.PROTECT)
     services = models.ManyToManyField(Service)
+
+    def to_dict(self):
+        return {
+            'pk': self.pk,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'rating_image': self.rating_image.url,
+            'review_count': self.review_count,
+            'avatar': self.avatar.url,
+            'start_experience_date': self.start_experience_date,
+            'speciality': self.speciality.name,
+            # 'services': self.services.all().values_list('pk', flat=True),
+        }
 
     @property
     def full_name(self):
@@ -180,7 +204,7 @@ class Payment(models.Model):
 
     user = models.ForeignKey(User, related_name='payments', on_delete=models.DO_NOTHING)
     created_at = models.DateTimeField('дата и время создания счета')
-    paid_at = models.DateTimeField('дата и время платежа', null=True)
+    paid_at = models.DateTimeField('дата и время платежа', null=True, blank=True)
     ptype = models.ForeignKey(PaymentType, related_name='payments', on_delete=models.DO_NOTHING)
     status = models.CharField('статус платежа', max_length=10, choices=Status.choices)
 
@@ -193,12 +217,20 @@ class Payment(models.Model):
         price = self.note.price * (1 - percent) - absolute
         return max(Decimal(0), price)
 
+    def is_paid(self):
+        return self.status == self.Status.paid
+
     class Meta:
         verbose_name = 'платеж'
         verbose_name_plural = 'платежи'
 
     def __str__(self):
         return f'Платеж {self.pk}'
+
+
+class NoteQuerySet(models.QuerySet):
+    def with_dt(self):
+        return self.annotate(dt=Concat(F('date'), Value(' '), F('stime'), output_field=models.CharField()))
 
 
 class Note(models.Model):
@@ -218,10 +250,12 @@ class Note(models.Model):
         null=True,
         blank=True
     )
-    created_at = models.DateTimeField(default=timezone.now)
-    date = models.DateField('дата', null=True)
+    created_at = models.DateTimeField('дата и время создания записи', default=timezone.now)
+    date = models.DateField('дата записи', null=True)
     stime = models.TimeField('время начала', null=True)
     etime = models.TimeField('время окончания', null=True)
+
+    objects = NoteQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'запись'
