@@ -49,3 +49,8 @@ def notes(request):
         }
     }
     return render(request, template_name='notes.html', context=context)
+
+
+def logout_user(request):
+    logout(request)
+    return redirect('main-view')

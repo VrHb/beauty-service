@@ -10,6 +10,7 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin-view'),
     path('', views.index, name='main-view'),
+    path('logout/', views.logout_user, name='logout'),
     path('notes/', views.notes, name='notes-view'),
     path('__debug__/', include('debug_toolbar.urls')),
 ]
