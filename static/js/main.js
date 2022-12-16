@@ -1,4 +1,67 @@
 $(document).ready(function() {
+    var cache = {};
+
+    $('.service__salons .panel').text('');
+    $.get('/saloons', function(data){
+        var elements = [];
+        $.each(data, function(index, item){
+            var element = `
+            <div class="accordion__block fic" data-pk="${item.pk}">
+              <div class="accordion__block_intro">${item.name}</div>
+              <div class="accordion__block_address">${item.address}</div>
+            </div>`;
+            elements.push(element);
+        });
+        $('.service__salons .panel').html(elements.join(''));
+        cache.saloons = data;
+    });
+
+    $('.service__services .panel').html('');
+    $.get('/service_groups', function(data){
+        var groupElements = [];
+        $.each(data, function(groupIndex, group){
+            var serviceElements = [];
+            $.each(group.services, function(serviceIndex, service){
+                var element = `
+                <div class="accordion__block_item fic" data-pk="${service.pk}">
+                    <div class="accordion__block_item_intro">${service.name}</div>
+                    <div class="accordion__block_item_address">${service.price} ₽</div>
+                </div>`;
+                serviceElements.push(element);
+            });
+            var serviceElementsHTML = serviceElements.join('');
+            var groupHTML = `
+            <button class="accordion">${group.name}</button>
+			<div class="panel">
+			  <div class="accordion__block_items" data-pk="${group.pk}">${serviceElementsHTML}</div>
+			</div>`;
+			groupElements.push(groupHTML);
+        });
+        $('.service__services .panel').html(groupElements.join(''));
+        cache.serviceGroups = data;
+    });
+
+    $('.service__masters .panel').text('');
+    $.get('/masters', function(data){
+        var elements = [];
+        $.each(data, function(index, item){
+            var element = `
+            <div class="accordion__block fic" data-pk="${item.pk}">
+              <div class="accordion__block_elems fic">
+                  <img src="${item.avatar}" alt="avatar" class="accordion__block_img">
+                  <div class="accordion__block_master">${item.full_name}</div>
+              </div>
+              <div class="accordion__block_prof">${item.speciality.name}</div>
+            </div>`;
+            elements.push(element);
+        });
+        $('.service__masters .panel').html(elements.join(''));
+        cache.saloons = data;
+    });
+
+
+    //////////////////////////////////////////////////////
+
 	$('.salonsSlider').slick({
 		arrows: true,
 	  slidesToShow: 4,
