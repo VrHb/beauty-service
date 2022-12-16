@@ -3,6 +3,8 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 from django.utils import timezone
 
 from .validators import validate_svg_file_extension
@@ -215,12 +217,20 @@ class Payment(models.Model):
         price = self.note.price * (1 - percent) - absolute
         return max(Decimal(0), price)
 
+    def is_paid(self):
+        return self.status == self.Status.paid
+
     class Meta:
         verbose_name = 'платеж'
         verbose_name_plural = 'платежи'
 
     def __str__(self):
         return f'Платеж {self.pk}'
+
+
+class NoteQuerySet(models.QuerySet):
+    def with_dt(self):
+        return self.annotate(dt=Concat(F('date'), Value(' '), F('stime'), output_field=models.CharField()))
 
 
 class Note(models.Model):
@@ -244,6 +254,8 @@ class Note(models.Model):
     date = models.DateField('дата записи', null=True)
     stime = models.TimeField('время начала', null=True)
     etime = models.TimeField('время окончания', null=True)
+
+    objects = NoteQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'запись'
