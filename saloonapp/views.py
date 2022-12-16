@@ -76,7 +76,7 @@ def get_free_timeslots(request: Request):
 
 
 def services(request):
-    return render(request, 'services.html', {})
+    return render(request, 'service.html', {})
 
 
 def logout_user(request):
