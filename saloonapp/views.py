@@ -2,9 +2,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
-
 from django.shortcuts import render
 from django.utils import timezone
+from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,11 +13,16 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 
 
-from .models import Saloon
+from .models import Saloon, ServiceGroup
 from .models import Service
 from .models import Master
 from .models import Note
-from .serializers import ServicesSerializer
+from .serializers import GetFreeTimeslotsSerializer
+from .serializers import SaloonSerializer
+from .serializers import ServiceSerializer
+from .serializers import ServiceGroupSerializer
+from .serializers import MasterSerializer
+from .serializers import MasterSpecialitySerializer
 from .utils import construct_calendar_by_filters
 
 
@@ -39,6 +44,7 @@ def index(request):
     return render(request, template_name='index.html', context=context)
 
 
+@login_required
 def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
@@ -82,3 +88,20 @@ def services(request):
 def logout_user(request):
     logout(request)
     return redirect('main-view')
+class SaloonViewSet(viewsets.ModelViewSet):
+    queryset = Saloon.objects.all()
+    serializer_class = SaloonSerializer
+
+
+class ServiceGroupViewSet(viewsets.ModelViewSet):
+    queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
+    serializer_class = ServiceGroupSerializer
+
+
+class MasterViewSet(viewsets.ModelViewSet):
+    queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
+    serializer_class = MasterSerializer
+
+
+def service(request):
+    return render(request, 'service.html', {})
