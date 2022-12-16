@@ -1,8 +1,6 @@
-from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -11,7 +9,6 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
-
 
 from .models import Saloon, ServiceGroup
 from .models import Service
@@ -69,7 +66,7 @@ def notes(request):
 
 @api_view(['GET'])
 def get_free_timeslots(request: Request):
-    serializer = ServicesSerializer(data=request.query_params)
+    serializer = GetFreeTimeslotsSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
 
     calendar = construct_calendar_by_filters(
@@ -88,6 +85,8 @@ def services(request):
 def logout_user(request):
     logout(request)
     return redirect('main-view')
+
+
 class SaloonViewSet(viewsets.ModelViewSet):
     queryset = Saloon.objects.all()
     serializer_class = SaloonSerializer

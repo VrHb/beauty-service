@@ -1,6 +1,7 @@
 $(document).ready(function() {
     var cache = {};
 
+    $('.service__salons button').attr('data-pk', '0');
     $('.service__salons .panel').text('');
     $.get('/saloons', function(data){
         var elements = [];
@@ -16,6 +17,7 @@ $(document).ready(function() {
         cache.saloons = data;
     });
 
+    $('.service__services button').attr('data-pk', '0');
     $('.service__services .panel').html('');
     $.get('/service_groups', function(data){
         var groupElements = [];
@@ -41,6 +43,7 @@ $(document).ready(function() {
         cache.serviceGroups = data;
     });
 
+    $('.service__masters button').attr('data-pk', '0');
     $('.service__masters .panel').text('');
     $.get('/masters', function(data){
         var elements = [];
@@ -57,6 +60,26 @@ $(document).ready(function() {
         });
         $('.service__masters .panel').html(elements.join(''));
         cache.saloons = data;
+    });
+
+    var morningTime = {times: ['10:00', '11:00'], name: 'Утро'};
+    var afternoonTime = {times: ['12:00', '13:00', '14:00', '15:00', '16:00'], name: 'День'};
+    var eveningTime = {times: ['17:00', '18:00', '19:00'], name: 'Вечер'};
+    var times = [morningTime, afternoonTime, eveningTime];
+    $('#time .time__elems').html(function(){
+        var timesHTMLElements = []
+        times.forEach(function(timeOfDay){
+            var timeslots = [];
+            timeOfDay.times.forEach(function(t){
+                timeslots.push(`<button data-time="${t}" class="time__elems_btn">${t}</button>`);
+            });
+        timesHTMLElements.push(`
+        <div class="time__items">
+          <div class="time__elems_intro">${timeOfDay.name}</div>
+          <div class="time__elems_elem fic">${timeslots.join('')}</div>
+        </div>`);
+        });
+        return timesHTMLElements.join('');
     });
 
 
