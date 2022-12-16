@@ -2,11 +2,16 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
+
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
 
 from .models import Saloon
 from .models import Service
@@ -17,6 +22,15 @@ from .utils import construct_calendar_by_filters
 
 
 def index(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('notes-view')
+        else:
+            messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
     context = {
         'saloons': Saloon.objects.all(),
         'services': Service.objects.all(),
@@ -25,7 +39,6 @@ def index(request):
     return render(request, template_name='index.html', context=context)
 
 
-@login_required
 def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
@@ -64,3 +77,7 @@ def get_free_timeslots(request: Request):
 
 def services(request):
     return render(request, 'services.html', {})
+=======
+def logout_user(request):
+    logout(request)
+    return redirect('main-view')
