@@ -2,7 +2,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.shortcuts import render, redirect
 
 from .models import Saloon
 from .models import Service
@@ -11,6 +13,15 @@ from .models import Note
 
 
 def index(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('notes-view')
+        else:
+            messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
     context = {
         'saloons': Saloon.objects.all(),
         'services': Service.objects.all(),
@@ -19,7 +30,6 @@ def index(request):
     return render(request, template_name='index.html', context=context)
 
 
-@login_required
 def notes(request):
     user = request.user
     notes = Note.objects.select_related('saloon', 'service', 'master', 'payment', 'promo').filter(user=user)
