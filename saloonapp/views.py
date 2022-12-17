@@ -26,6 +26,8 @@ from .serializers import MasterSerializer
 from .serializers import MasterSpecialitySerializer
 from .utils import construct_calendar_by_filters
 
+from .forms import SignUpUser
+
 
 def index(request):
     if request.method == 'POST':
@@ -166,3 +168,19 @@ class MasterViewSet(viewsets.ModelViewSet):
 
 def service(request):
     return render(request, 'service.html', {})
+
+
+def register_user(request):
+    if request.method == 'POST':
+        form = SignUpUser(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password1']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            messages.success(request, "Вы зарегистрировались!")
+            return redirect('notes-view')
+    else:
+        form = SignUpUser()
+    return render(request, 'registration.html', {'form': form})
