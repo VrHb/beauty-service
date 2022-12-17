@@ -10,9 +10,13 @@
   {% if form.error %}
     <p>Error from!</p>
   {% endif %}
-  <h1>Регистрация</h1>
-  <form action="{% url 'registration' %}" method=POST>
-    {% csrf_token %}
-    {{ form }}
-  </form>
+    <h1>Регистрация</h1>
+    <form action="{% url 'registration' %}" method=POST>
+      <div class="form-group">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <br>
+        <button class="popup__btn authPopup__btn" type="submit">Зарегистрироваться</button>
+      </div>
+    </form>
 {% endblock %}

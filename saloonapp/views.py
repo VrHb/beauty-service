@@ -9,7 +9,6 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
@@ -25,6 +24,8 @@ from .serializers import ServiceGroupSerializer
 from .serializers import MasterSerializer
 from .serializers import MasterSpecialitySerializer
 from .utils import construct_calendar_by_filters
+
+from .forms import SignUpUser
 
 
 def index(request):
@@ -110,15 +111,15 @@ def service(request):
 
 def register_user(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = SignUpUser(request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
+            password = form.cleaned_data['password1']
             user = authenticate(username=username, password=password)
             login(request, user)
             messages.success(request, "Вы зарегистрировались!")
-            return reidrect('main-view')
+            return redirect('notes-view')
     else:
-        form = UserCreationForm()
+        form = SignUpUser()
     return render(request, 'registration.html', {'form': form})
