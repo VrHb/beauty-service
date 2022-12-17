@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block header_service_js %}
-<script src="{% static 'js/air-datepicker.js' %}"></script>
+  <script src="js/air-datepicker.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -181,4 +181,7 @@
 			</div>
 		</div>
 	</section>
+{% endblock %}
+{% block js_service %}
+  <script src="{% static 'js/main.js' %}"></script>
 {% endblock %}
