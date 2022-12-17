@@ -17,6 +17,7 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
     path('notes/', views.notes, name='notes-view'),
     path('get_free_timeslots/', views.get_free_timeslots, name='get_free_timeslots-api'),
+    path('get_blocked_timeslots/', views.get_blocked_timeslots, name='get_blocked_timeslots-api'),
     path('service/', views.service, name='service'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
