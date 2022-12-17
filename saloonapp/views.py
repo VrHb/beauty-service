@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
@@ -105,3 +106,19 @@ class MasterViewSet(viewsets.ModelViewSet):
 
 def service(request):
     return render(request, 'service.html', {})
+
+
+def register_user(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            messages.success(request, "Вы зарегистрировались!")
+            return reidrect('main-view')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration.html', {'form': form})

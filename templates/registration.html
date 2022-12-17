@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+<title>Beauty Cuty - Registration</title>
+{% endblock %}
+
+{% block content %}
+  {% if form.error %}
+    <p>Error from!</p>
+  {% endif %}
+  <h1>Регистрация</h1>
+  <form action="{% url 'registration' %}" method=POST>
+    {% csrf_token %}
+    {{ form }}
+  </form>
+{% endblock %}
