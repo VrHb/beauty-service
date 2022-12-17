@@ -304,6 +304,7 @@
 	<div style="display: none;">
 		<div class="box-modal authPopup popup" id="authModal">
       <div class="box-modal_close arcticmodal-close"><img src="{% static 'img/x.svg' %}" alt="x"></div>
+      <img class="mb-4" src="{% static 'img/Logo.svg' %}" alt="" width="72" height="57">    
 			<div class="popup__title authPopup__title">Личный кабинет</div>
       {% if messages %}
         {% for message in messages %}
@@ -313,13 +314,17 @@
 			<p class="popup__text authPopup__text">Введите имя пользователя и пароль</p>
       <form  action="" method="POST">
         {% csrf_token %}
-        <input class="contacts__inputBlock" type="text" name="username" class="contacts__form_iunput" required="">
-        <input class="contacts__inputBlock" type="password" name="password" class="contacts__form_iunput" required="">
-        <div class="contacts__form_checkboxBlock fic">
-					<input type="checkbox" class="contacts__form_checkbox" checked="">
-					<span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
+        <div class="form-floating">
+          <input type="text" name="username" class="contacts__form_iunput" required="" placeholder="Имя пользователя">
+        </div>
+        <div class="form-floating">
+          <input type="password" name="password" class="contacts__form_iunput" required="" placeholder="Пароль">
+        </div>
+          <div class="ckeckbox mb-3">
+            <input type="checkbox" class="contacts__form_checkbox" checked="">
+            <span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой конфидециоальности</span>
 				</div>
-				<button type="submit" value="Submit">Войти</button>
+        <button class="popup__btn authPopup__btn" type="submit">Войти</button>
 			</form>
 		</div>
 	</div>
