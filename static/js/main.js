@@ -53,6 +53,16 @@ $(document).ready(function() {
                      panel.addClass('active')
             });
         });
+
+        $('.service__services .panel .accordion__block_item').click(function(e) {
+		    let thisName,thisAddress;
+		    thisName = $(this).find('> .accordion__block_item_intro').text()
+		    thisAddress = $(this).find('> .accordion__block_item_address').text()
+		    $(this).parent().parent().parent().parent().find('> button.active').addClass('selected').text(thisName + '  ' +thisAddress)
+		    setTimeout(() => {
+			    $(this).parent().parent().parent().parent().find('> button.active').click()
+		    }, 200)
+	    })
     });
 
     $('.service__masters button').attr('data-pk', '0');
@@ -105,6 +115,16 @@ $(document).ready(function() {
         return result;
     }
 
+    function addClickTimeListener(){
+        $('.time__items .time__elems_elem .time__elems_btn').each(function(i, el){
+            $(el).click(function(e) {
+                e.preventDefault()
+                $('.time__elems_btn').removeClass('active')
+                $(this).addClass('active')
+            });
+        });
+    };
+
     function show_calendar(data){
         var morningTime = {times: ['10:00', '11:00'], name: 'Утро'};
         var afternoonTime = {times: ['12:00', '13:00', '14:00', '15:00', '16:00'], name: 'День'};
@@ -127,6 +147,8 @@ $(document).ready(function() {
             });
             return timesHTMLElements.join('');
         });
+
+        addClickTimeListener();
     };
 
     function updateCalendar(){
@@ -357,8 +379,12 @@ $(document).ready(function() {
 	})
 
 	$(document).on('click', '.servicePage', function() {
-		if($('.time__items .time__elems_elem .time__elems_btn').hasClass('active') && $('.service__form_block > button').hasClass('selected')) {
-			$('.time__btns_next').addClass('active')
+	    var timeChosen = $('.time__items .time__elems_elem .time__elems_btn').hasClass('active');
+	    var saloonChosen = $('.service__salons > button').hasClass('selected');
+	    var serviceChosen = $('.service__salons > button').hasClass('selected');
+	    var masterChosen = $('.service__masters > button').hasClass('selected');
+		if (timeChosen && saloonChosen && serviceChosen && masterChosen) {
+			$('.time__btns_next').addClass('active');
 		}
 	})
 
