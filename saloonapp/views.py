@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
+from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets
@@ -11,19 +12,22 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
+from .models import Note
+from .models import Payment
+from .models import Promo
+from .models import Master
 from .models import Saloon
+from .models import SaloonMasterWeekday
 from .models import ServiceGroup
 from .models import Service
-from .models import Master
-from .models import SaloonMasterWeekday
-from .models import Note
-from .serializers import GetFreeTimeslotsSerializer
-from .serializers import SaloonSerializer
-from .serializers import ServiceSerializer
+from .serializers import BlockedTımeSerializer
+from .serializers import NoteGetSerializer
+from .serializers import NotePostSerializer
+from .serializers import PaymentGetSerializer
+from .serializers import PromoGetSerializer
+from .serializers import SaloonGetSerializer
 from .serializers import ServiceGroupSerializer
-from .serializers import MasterSerializer
-from .serializers import MasterSpecialitySerializer
-
+from .serializers import MasterGetSerializer
 from .forms import SignUpUser
 
 
@@ -70,7 +74,7 @@ def notes(request):
 
 @api_view(['GET'])
 def get_blocked_timeslots(request: Request):
-    serializer = GetFreeTimeslotsSerializer(data=request.query_params)
+    serializer = BlockedTımeSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
@@ -132,27 +136,55 @@ def logout_user(request):
     return redirect('main-view')
 
 
-class SaloonViewSet(viewsets.ModelViewSet):
+class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Saloon.objects.all()
-    serializer_class = SaloonSerializer
+    serializer_class = SaloonGetSerializer
 
 
-class ServiceGroupViewSet(viewsets.ModelViewSet):
+class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
     serializer_class = ServiceGroupSerializer
 
 
-class MasterViewSet(viewsets.ModelViewSet):
+class MasterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
-    serializer_class = MasterSerializer
+    serializer_class = MasterGetSerializer
 
 
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related('user', 'ptype').all()
+    serializer_class = PaymentGetSerializer
+
+
+class PromoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Promo.objects.all()
+    serializer_class = PromoGetSerializer
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.select_related().all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return NotePostSerializer
+        return NoteGetSerializer
+
+
+@login_required
 def service(request):
     return render(request, 'service.html', {})
 
 
-def service_finally(request):
-    return render(request, 'serviceFinally.html', {})
+@login_required
+def service_finally(request: WSGIRequest):
+    if request.method == 'GET':
+        note_pk = request.COOKIES.get('note_pk', '')
+        if not note_pk:
+            return redirect('service')
+        note = Note.objects.get(pk=note_pk)
+        return render(request, 'serviceFinally.html', {'note': note})
+    return redirect('notes')
+
 
 
 def register_user(request):

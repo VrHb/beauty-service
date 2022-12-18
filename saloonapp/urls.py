@@ -10,6 +10,9 @@ router = routers.DefaultRouter()
 router.register('saloons', views.SaloonViewSet)
 router.register('service_groups', views.ServiceGroupViewSet)
 router.register('masters', views.MasterViewSet)
+router.register('payments', views.PaymentViewSet)
+router.register('promos', views.PromoViewSet)
+router.register('notes-api', views.NoteViewSet)
 
 urlpatterns = [
     path('', views.index, name='main-view'),
@@ -17,7 +20,6 @@ urlpatterns = [
     path('logout/', views.logout_user, name='logout'),
     path('registration/', views.register_user, name='registration'),
     path('notes/', views.notes, name='notes-view'),
-    path('get_free_timeslots/', views.get_free_timeslots, name='get_free_timeslots-api'),
     path('get_blocked_timeslots/', views.get_blocked_timeslots, name='get_blocked_timeslots-api'),
     path('service/', views.service, name='service'),
     path('service-finally/', views.service_finally, name='service_finally'),
