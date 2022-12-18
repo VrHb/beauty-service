@@ -1,5 +1,24 @@
 $(document).ready(function() {
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    };
+
+    function setCookie(name,value,seconds) {
+        var expires = "";
+        if (seconds) {
+            var date = new Date();
+            date.setTime(date.getTime() + (seconds*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    };
+
     var cache = {blocked: {}};
+    const user_id = JSON.parse(document.getElementById('user_id').textContent);
+    const service_finally_url = JSON.parse(document.getElementById('service_finally_url').textContent);
+    const service_url = JSON.parse(document.getElementById('service_url').textContent);
 
     $('.service__salons button').attr('data-pk', '0');
     $('.service__salons .panel').text('');
@@ -89,6 +108,7 @@ $(document).ready(function() {
         var dateCell = $('.air-datepicker-body--cells .-selected-');
         if (!dateCell.length) {
             var dateCell = $('.air-datepicker-body--cells .-current-');
+            $(dateCell).addClass('.-selected-');
         };
         // В datepicker месяц с 0
         var month = parseInt(dateCell.attr('data-month')) + 1;
@@ -184,6 +204,32 @@ $(document).ready(function() {
 			$(this).parent().parent().find('> button.active').click()
 		}, 200)
 	});
+
+	$(document).on('click', '.service__services .accordion__block_item', function(e) {
+		let thisName,thisAddress;
+
+		thisName = $(this).find('> .accordion__block_intro').text()
+		thisAddress = $(this).find('> .accordion__block_address').text()
+
+		$(this).parent().parent().parent().parent().find('.accordion').attr('data-pk', $(this).attr('data-pk'));
+
+		updateCalendar();
+
+		$(this).parent().parent().find('> button.active').addClass('selected').text(thisName + '  ' +thisAddress)
+		setTimeout(() => {
+			$(this).parent().parent().parent().find('> button.active').click()
+		}, 200)
+	});
+
+	$('.serviceFinallys__form_back').click(function(e) {
+		e.preventDefault();
+		window.location.href = service_url;
+	});
+
+	$('.serviceFinallys__form_btn').submit(function(){
+        var expiresThroughSeconds = 60 * 1; // 1 minute
+        setCookie('note_pk', $('.serviceFinally__form_header__number').attr('data-pk'), expiresThroughSeconds);
+    });
     //////////////////////////////////////////////////////
 
 	$('.salonsSlider').slick({
@@ -378,15 +424,51 @@ $(document).ready(function() {
 		$(this).addClass('active')
 	})
 
+	function postNote(){
+	    var servicePk = $('.service__services button').attr('data-pk');
+        var price;
+        cache.serviceGroups.forEach(function(serviceGroup){
+            serviceGroup.services.forEach(function(service){
+                if (String(servicePk) == String(service.pk)) {
+                    price = service.price;
+                };
+            });
+        });
+        var date = get_picked_filters().filters.date;
+        var noteParams = {
+            user: user_id,
+            saloon: $('.service__salons button').attr('data-pk'),
+            service: servicePk,
+            master: $('.service__masters button').attr('data-pk'),
+            price: price,
+            date: date,
+            stime: $('.time__items .time__elems_elem .time__elems_btn').attr('data-time'),
+            csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value
+        };
+
+        $.post("/notes-api/", noteParams, function(data) {
+            var expiresThroughSeconds = 60 * 10; // 10 minutes
+            setCookie('note_pk', data.pk, expiresThroughSeconds);
+            window.location.href = service_finally_url;
+        }).fail(function(data) {
+            console.log(data);
+        });
+	};
+
 	$(document).on('click', '.servicePage', function() {
 	    var timeChosen = $('.time__items .time__elems_elem .time__elems_btn').hasClass('active');
 	    var saloonChosen = $('.service__salons > button').hasClass('selected');
 	    var serviceChosen = $('.service__salons > button').hasClass('selected');
 	    var masterChosen = $('.service__masters > button').hasClass('selected');
 		if (timeChosen && saloonChosen && serviceChosen && masterChosen) {
-			$('.time__btns_next').addClass('active');
+		    if (!$('.time__btns_next').hasClass('active')) {
+                $('.time__btns_next').addClass('active');
+                $('.time__btns_next.active').click(function(e){
+                    postNote();
+                });
+		    };
 		}
-	})
+	});
 
     //////////////////////////////////////////////////////////
 })

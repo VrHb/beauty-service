@@ -175,6 +175,11 @@ class PaymentType(models.Model):
         verbose_name = 'тип платежа'
         verbose_name_plural = 'типы платежей'
 
+    @classmethod
+    def get_default_pk(cls):
+        ptype, created = cls.objects.get_or_create(name='Неизвестно')
+        return ptype.pk
+
     def __str__(self):
         return self.name
 
@@ -203,9 +208,14 @@ class Payment(models.Model):
         created = 'Создан'
 
     user = models.ForeignKey(User, related_name='payments', on_delete=models.DO_NOTHING)
-    created_at = models.DateTimeField('дата и время создания счета')
+    created_at = models.DateTimeField('дата и время создания счета', default=timezone.now)
     paid_at = models.DateTimeField('дата и время платежа', null=True, blank=True)
-    ptype = models.ForeignKey(PaymentType, related_name='payments', on_delete=models.DO_NOTHING)
+    ptype = models.ForeignKey(
+        PaymentType,
+        related_name='payments',
+        on_delete=models.DO_NOTHING,
+        default=PaymentType.get_default_pk
+    )
     status = models.CharField('статус платежа', max_length=10, choices=Status.choices)
 
     def get_total_price(self):
@@ -238,7 +248,7 @@ class Note(models.Model):
     saloon = models.ForeignKey(Saloon, related_name='notes', on_delete=models.DO_NOTHING, null=True)
     service = models.ForeignKey(Service, related_name='notes', on_delete=models.DO_NOTHING)
     master = models.ForeignKey(Master, related_name='notes', on_delete=models.DO_NOTHING)
-    payment = models.OneToOneField(Payment, on_delete=models.DO_NOTHING)
+    payment = models.OneToOneField(Payment, on_delete=models.DO_NOTHING, null=True)
     # TODO: Для отображения цен со скидкой (например 50% для первой) нужно сделать
     # менеджер, который подтянет с актуальными ценами для юзера.
     # На вход менеждеру промокод

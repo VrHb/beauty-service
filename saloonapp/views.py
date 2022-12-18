@@ -1,7 +1,8 @@
-from collections import Counter
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
+from django.core.handlers.wsgi import WSGIRequest
+from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets
@@ -12,20 +13,22 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
+from .models import Note
+from .models import Payment
+from .models import Promo
+from .models import Master
 from .models import Saloon
+from .models import SaloonMasterWeekday
 from .models import ServiceGroup
 from .models import Service
-from .models import Master
-from .models import SaloonMasterWeekday
-from .models import Note
-from .serializers import GetFreeTimeslotsSerializer
+from .serializers import BlockedTimeSerializer
+from .serializers import NoteGetSerializer
+from .serializers import NotePostSerializer
+from .serializers import PaymentSerializer
+from .serializers import PromoSerializer
 from .serializers import SaloonSerializer
-from .serializers import ServiceSerializer
 from .serializers import ServiceGroupSerializer
 from .serializers import MasterSerializer
-from .serializers import MasterSpecialitySerializer
-from .utils import construct_calendar_by_filters
-
 from .forms import SignUpUser
 
 
@@ -51,7 +54,8 @@ def index(request):
 def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
-        'saloon', 'service', 'master', 'payment', 'promo').filter(user=user).order_by('-dt')
+        'saloon', 'service', 'master', 'payment', 'promo'
+    ).filter(user=user, payment__isnull=False).order_by('-dt')
     active_notes = notes.filter(dt__gt=timezone.now())
     past_notes = notes.filter(dt__lte=timezone.now())
     total_price = Decimal(0)
@@ -71,27 +75,14 @@ def notes(request):
 
 
 @api_view(['GET'])
-def get_free_timeslots(request: Request):
-    serializer = GetFreeTimeslotsSerializer(data=request.query_params)
-    serializer.is_valid(raise_exception=True)
-
-    calendar = construct_calendar_by_filters(
-        serializer.validated_data['date'],
-        serializer.validated_data.get('saloon', None),
-        serializer.validated_data.get('master', None),
-        serializer.validated_data.get('service', None),
-    )
-    return Response(calendar)
-
-
-@api_view(['GET'])
 def get_blocked_timeslots(request: Request):
-    serializer = GetFreeTimeslotsSerializer(data=request.query_params)
+    serializer = BlockedTimeSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
     # составим фильтры для записей и для рабочих дней мастеров в салонах
-    note_filters = {'date': serializer.validated_data['date']}
+    # если у записи нет платежа, то она еще не подтверждена и это время свободно
+    note_filters = {'date': serializer.validated_data['date'], 'payment__isnull': False}
     saloon_master_filters = {'isoweekday': note_filters['date'].isoweekday()}
     for key in ['saloon', 'service', 'master']:
         if key in serializer.validated_data:
@@ -104,19 +95,16 @@ def get_blocked_timeslots(request: Request):
     # если нет рабочих дней у мастеров в салонах по фильтрам, то все занято
     saloon_master_day_items = SaloonMasterWeekday.objects.filter(**saloon_master_filters)
     if not saloon_master_day_items:
-        print('saloon_master_day_items')
         return Response(timeslots)
 
     # если среди фильтров только дата, то пользователь все равно
     # еще будет делать выбор, поэтому отдадим, что все свободно
     if len(note_filters.keys()) == 1:
-        print('keys')
         return Response([])
 
     # если нет записей по фильтрам, то все свободно
     note_stimes = Note.objects.filter(**note_filters)
     if not note_stimes:
-        print('note_stimes')
         return Response([])
 
     # составляем комбинации [салон, мастер(в котором работает мастер)]
@@ -151,27 +139,62 @@ def logout_user(request):
     return redirect('main-view')
 
 
-class SaloonViewSet(viewsets.ModelViewSet):
+class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Saloon.objects.all()
     serializer_class = SaloonSerializer
 
 
-class ServiceGroupViewSet(viewsets.ModelViewSet):
+class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
     serializer_class = ServiceGroupSerializer
 
 
-class MasterViewSet(viewsets.ModelViewSet):
+class MasterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
     serializer_class = MasterSerializer
 
 
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related('user', 'ptype').all()
+    serializer_class = PaymentSerializer
+
+
+class PromoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Promo.objects.all()
+    serializer_class = PromoSerializer
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.select_related().all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return NotePostSerializer
+        return NoteGetSerializer
+
+
+@login_required
 def service(request):
     return render(request, 'service.html', {})
 
 
-def service_finally(request):
-    return render(request, 'serviceFinally.html', {})
+@login_required
+def service_finally(request: WSGIRequest):
+    note_pk = request.COOKIES.get('note_pk', '')
+    if not note_pk:
+        return redirect('service')
+    note = Note.objects.get(pk=note_pk)
+    if request.method == 'GET':
+        return render(request, 'serviceFinally.html', {'note': note})
+    with transaction.atomic():
+        payment = Payment.objects.create(
+            user=note.user,
+            status=Payment.Status.created
+        )
+        note.payment = payment
+        note.save()
+        request.COOKIES['note_pk'] = ''
+    return redirect('notes-view')
 
 
 def register_user(request):
