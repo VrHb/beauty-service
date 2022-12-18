@@ -20,5 +20,6 @@ urlpatterns = [
     path('get_free_timeslots/', views.get_free_timeslots, name='get_free_timeslots-api'),
     path('get_blocked_timeslots/', views.get_blocked_timeslots, name='get_blocked_timeslots-api'),
     path('service/', views.service, name='service'),
+    path('service-finally/', views.service_finally, name='service_finally'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

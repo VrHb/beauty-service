@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+<title>Beauty City - Service final</title>
+{% endblock %}
+
+{% block content %}
+	<section id="serviceFinally">
+		<div class="container">
+			<div class="serviceFinally">
+				<div class="row">
+					<div class="col-md-6 col-lg-6">
+						<div class="breadCrumbs">
+              <a href="{% url 'main-view' %}" class="breadCrumbs__item">На главную</a>
+						</div>
+						<div class="service__block">
+							<h1 class="service__title">Запись на услугу</h1>
+						</div>
+            {% if not request.user.is_authenticated %}
+              <form action="#" class="serviceFinally__form">
+                <div class="serviceFinally__form_block">
+                  <div class="serviceFinally__form_header fic">
+                    <span class="serviceFinally__form_header__number">Запись №32985</span>
+                    <div class="serviceFinally__form_header__item fic">
+                      <div class="serviceFinally__form_header__service">BeautyCity Пушкинская</div>
+                      <div class="serviceFinally__form_header__address">ул. Пушкинская, д. 78А</div>
+                    </div>
+                  </div>
+                  <div class="serviceFinally__form_content">
+                    <div class="serviceFinally__form_content__block fic">
+                      <div class="serviceFinally__form_content__title">Дневной макияж</div>
+                      <div class="serviceFinally__form_content__price">750 ₽</div>
+                    </div>
+                    <div class="serviceFinally__form_content__block fic">
+                      <div class="serviceFinally__form_content__items fic">
+                        <img src="{% static 'img/masters/avatar/vizajist1.svg' %}" alt="avatar" class="accordion__block_img">
+                          <div class="accordion__block_master">Елена Грибнова</div>
+                        </div>
+                        <div class="serviceFinally__form_content__item fic">
+                        <div class="serviceFinally__form_content__time">16:30</div>
+                        <div class="serviceFinally__form_content__date">18 ноября</div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+                <div class="serviceFinally__form_itesm">
+                  <div class="contacts__form_block fic">
+                    <input type="text" name="username" class="contacts__form_iunput" placeholder="Введите имя пользвателя" required="">
+                  </div>
+                  <div class="contacts__form_block fic">
+                    <input type="text" name="username" class="contacts__form_iunput" placeholder="Ваше имя" required="">
+                  </div>
+                  <div class="contacts__form_block fic">
+                    <input type="text" name="username" class="contacts__form_iunput" placeholder="Фамилия" required="">
+                  </div>
+                  <div class="contacts__form_block fic">
+                    <input type="password1" name="password" class="contacts__form_iunput" placeholder="Пароль" required="">
+                  </div>
+                  <div class="contacts__form_block fic">
+                    <input type="password2" name="password" class="contacts__form_iunput" placeholder="Потвердите пароль" required="">
+                  </div>
+                  
+                  <div class="contacts__form_checkboxBlock fic">
+                    <input type="checkbox" class="contacts__form_checkbox" checked="">
+                    <span class="contacts__form_checkboxBlock__intro">Я согласен(а) с политикой <a href="{% static 'Agreement.pdf' %}">конфидециальности</a></span>
+                  </div>
+                  <button type="submit" class="serviceFinallys__form_btn">Записаться</button>
+                  <button type="submit" class="serviceFinallys__form_back">Назад</button>
+                </div>
+              </form>	
+            {% else %}
+              <form action="#" class="serviceFinally__form">
+                <div class="serviceFinally__form_block">
+                  <div class="serviceFinally__form_header fic">
+                    <span class="serviceFinally__form_header__number">Запись №32985</span>
+                    <div class="serviceFinally__form_header__item fic">
+                      <div class="serviceFinally__form_header__service">BeautyCity Пушкинская</div>
+                      <div class="serviceFinally__form_header__address">ул. Пушкинская, д. 78А</div>
+                    </div>
+                  </div>
+                  <div class="serviceFinally__form_content">
+                    <div class="serviceFinally__form_content__block fic">
+                      <div class="serviceFinally__form_content__title">Дневной макияж</div>
+                      <div class="serviceFinally__form_content__price">750 ₽</div>
+                    </div>
+                    <div class="serviceFinally__form_content__block fic">
+                      <div class="serviceFinally__form_content__items fic">
+                        <img src="{% static 'img/masters/avatar/vizajist1.svg' %}" alt="avatar" class="accordion__block_img">
+                          <div class="accordion__block_master">Елена Грибнова</div>
+                        </div>
+                        <div class="serviceFinally__form_content__item fic">
+                        <div class="serviceFinally__form_content__time">16:30</div>
+                        <div class="serviceFinally__form_content__date">18 ноября</div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+                  <button type="submit" class="serviceFinallys__form_btn">Записаться</button>
+                  <button type="submit" class="serviceFinallys__form_back">Назад</button>
+            {% endif %}
+					</div>
+					<div class="col-md-12 col-lg-5">
+            <img src="{% static 'img/bannerImg.svg' %}" alt="bannerImg" class="banner__img">
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+{% endblock %}

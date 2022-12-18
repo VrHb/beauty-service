@@ -170,6 +170,10 @@ def service(request):
     return render(request, 'service.html', {})
 
 
+def service_finally(request):
+    return render(request, 'serviceFinally.html', {})
+
+
 def register_user(request):
     if request.method == 'POST':
         form = SignUpUser(request.POST)
