@@ -1,4 +1,3 @@
-from collections import Counter
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -24,7 +23,6 @@ from .serializers import ServiceSerializer
 from .serializers import ServiceGroupSerializer
 from .serializers import MasterSerializer
 from .serializers import MasterSpecialitySerializer
-from .utils import construct_calendar_by_filters
 
 from .forms import SignUpUser
 
@@ -71,20 +69,6 @@ def notes(request):
 
 
 @api_view(['GET'])
-def get_free_timeslots(request: Request):
-    serializer = GetFreeTimeslotsSerializer(data=request.query_params)
-    serializer.is_valid(raise_exception=True)
-
-    calendar = construct_calendar_by_filters(
-        serializer.validated_data['date'],
-        serializer.validated_data.get('saloon', None),
-        serializer.validated_data.get('master', None),
-        serializer.validated_data.get('service', None),
-    )
-    return Response(calendar)
-
-
-@api_view(['GET'])
 def get_blocked_timeslots(request: Request):
     serializer = GetFreeTimeslotsSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
@@ -104,19 +88,16 @@ def get_blocked_timeslots(request: Request):
     # если нет рабочих дней у мастеров в салонах по фильтрам, то все занято
     saloon_master_day_items = SaloonMasterWeekday.objects.filter(**saloon_master_filters)
     if not saloon_master_day_items:
-        print('saloon_master_day_items')
         return Response(timeslots)
 
     # если среди фильтров только дата, то пользователь все равно
     # еще будет делать выбор, поэтому отдадим, что все свободно
     if len(note_filters.keys()) == 1:
-        print('keys')
         return Response([])
 
     # если нет записей по фильтрам, то все свободно
     note_stimes = Note.objects.filter(**note_filters)
     if not note_stimes:
-        print('note_stimes')
         return Response([])
 
     # составляем комбинации [салон, мастер(в котором работает мастер)]
