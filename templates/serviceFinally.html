@@ -19,7 +19,8 @@
 							<h1 class="service__title">Запись на услугу</h1>
 						</div>
             {% if not request.user.is_authenticated %}
-              <form action="#" class="serviceFinally__form">
+              <form action="{% url 'service_finally' %}" class="serviceFinally__form" method="post">
+                {% csrf_token %}
                 <div class="serviceFinally__form_block">
                   <div class="serviceFinally__form_header fic">
                     <span class="serviceFinally__form_header__number">Запись №{{ note.pk }}</span>
@@ -40,7 +41,7 @@
                         </div>
                         <div class="serviceFinally__form_content__item fic">
                         <div class="serviceFinally__form_content__time">{{ note.stime }}</div>
-                        <div class="serviceFinally__form_content__date">{{ note.pk }}</div>
+                        <div class="serviceFinally__form_content__date">{{ note.date }}</div>
                       </div>
                     </div>
                     
@@ -72,10 +73,11 @@
                 </div>
               </form>	
             {% else %}
-              <form action="#" class="serviceFinally__form">
+              <form action="{% url 'service_finally' %}" class="serviceFinally__form" method="post">
+                {% csrf_token %}
                 <div class="serviceFinally__form_block">
                   <div class="serviceFinally__form_header fic">
-                    <span class="serviceFinally__form_header__number">Запись №{{ note.pk }}</span>
+                    <span class="serviceFinally__form_header__number" data-pk="{{ note.pk }}">Запись №{{ note.pk }}</span>
                     <div class="serviceFinally__form_header__item fic">
                       <div class="serviceFinally__form_header__service">{{ note.saloon.name }}</div>
                       <div class="serviceFinally__form_header__address">{{ note.saloon.address }}</div>
@@ -93,7 +95,7 @@
                         </div>
                         <div class="serviceFinally__form_content__item fic">
                         <div class="serviceFinally__form_content__time">{{ note.stime }}</div>
-                        <div class="serviceFinally__form_content__date">{{ note.pk }}</div>
+                        <div class="serviceFinally__form_content__date">{{ note.date }}</div>
                       </div>
                     </div>
                     

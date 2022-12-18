@@ -102,6 +102,8 @@
             {{ request.user.id|json_script:"user_id" }}
             {% url 'service_finally' as service_finally_url_var %}
             {{ service_finally_url_var|json_script:"service_finally_url" }}
+            {% url 'service' as service_url_var %}
+            {{ service_url_var|json_script:"service_url" }}
             {% if not request.user.avatar %}
             <a href="{% url 'notes-view' %}">
               <img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">

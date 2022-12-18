@@ -18,6 +18,7 @@ $(document).ready(function() {
     var cache = {blocked: {}};
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     const service_finally_url = JSON.parse(document.getElementById('service_finally_url').textContent);
+    const service_url = JSON.parse(document.getElementById('service_url').textContent);
 
     $('.service__salons button').attr('data-pk', '0');
     $('.service__salons .panel').text('');
@@ -219,6 +220,16 @@ $(document).ready(function() {
 			$(this).parent().parent().parent().find('> button.active').click()
 		}, 200)
 	});
+
+	$('.serviceFinallys__form_back').click(function(e) {
+		e.preventDefault();
+		window.location.href = service_url;
+	});
+
+	$('.serviceFinallys__form_btn').submit(function(){
+        var expiresThroughSeconds = 60 * 1; // 1 minute
+        setCookie('note_pk', $('.serviceFinally__form_header__number').attr('data-pk'), expiresThroughSeconds);
+    });
     //////////////////////////////////////////////////////
 
 	$('.salonsSlider').slick({

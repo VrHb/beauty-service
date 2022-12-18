@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
 from django.core.handlers.wsgi import WSGIRequest
+from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets
@@ -20,14 +21,14 @@ from .models import Saloon
 from .models import SaloonMasterWeekday
 from .models import ServiceGroup
 from .models import Service
-from .serializers import BlockedTımeSerializer
+from .serializers import BlockedTimeSerializer
 from .serializers import NoteGetSerializer
 from .serializers import NotePostSerializer
-from .serializers import PaymentGetSerializer
-from .serializers import PromoGetSerializer
-from .serializers import SaloonGetSerializer
+from .serializers import PaymentSerializer
+from .serializers import PromoSerializer
+from .serializers import SaloonSerializer
 from .serializers import ServiceGroupSerializer
-from .serializers import MasterGetSerializer
+from .serializers import MasterSerializer
 from .forms import SignUpUser
 
 
@@ -53,7 +54,8 @@ def index(request):
 def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
-        'saloon', 'service', 'master', 'payment', 'promo').filter(user=user).order_by('-dt')
+        'saloon', 'service', 'master', 'payment', 'promo'
+    ).filter(user=user, payment__isnull=False).order_by('-dt')
     active_notes = notes.filter(dt__gt=timezone.now())
     past_notes = notes.filter(dt__lte=timezone.now())
     total_price = Decimal(0)
@@ -74,12 +76,13 @@ def notes(request):
 
 @api_view(['GET'])
 def get_blocked_timeslots(request: Request):
-    serializer = BlockedTımeSerializer(data=request.query_params)
+    serializer = BlockedTimeSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
     # составим фильтры для записей и для рабочих дней мастеров в салонах
-    note_filters = {'date': serializer.validated_data['date']}
+    # если у записи нет платежа, то она еще не подтверждена и это время свободно
+    note_filters = {'date': serializer.validated_data['date'], 'payment__isnull': False}
     saloon_master_filters = {'isoweekday': note_filters['date'].isoweekday()}
     for key in ['saloon', 'service', 'master']:
         if key in serializer.validated_data:
@@ -138,7 +141,7 @@ def logout_user(request):
 
 class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Saloon.objects.all()
-    serializer_class = SaloonGetSerializer
+    serializer_class = SaloonSerializer
 
 
 class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -148,17 +151,17 @@ class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class MasterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
-    serializer_class = MasterGetSerializer
+    serializer_class = MasterSerializer
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.select_related('user', 'ptype').all()
-    serializer_class = PaymentGetSerializer
+    serializer_class = PaymentSerializer
 
 
 class PromoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Promo.objects.all()
-    serializer_class = PromoGetSerializer
+    serializer_class = PromoSerializer
 
 
 class NoteViewSet(viewsets.ModelViewSet):
@@ -177,14 +180,21 @@ def service(request):
 
 @login_required
 def service_finally(request: WSGIRequest):
+    note_pk = request.COOKIES.get('note_pk', '')
+    if not note_pk:
+        return redirect('service')
+    note = Note.objects.get(pk=note_pk)
     if request.method == 'GET':
-        note_pk = request.COOKIES.get('note_pk', '')
-        if not note_pk:
-            return redirect('service')
-        note = Note.objects.get(pk=note_pk)
         return render(request, 'serviceFinally.html', {'note': note})
-    return redirect('notes')
-
+    with transaction.atomic():
+        payment = Payment.objects.create(
+            user=note.user,
+            status=Payment.Status.created
+        )
+        note.payment = payment
+        note.save()
+        request.COOKIES['note_pk'] = ''
+    return redirect('notes-view')
 
 
 def register_user(request):
