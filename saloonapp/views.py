@@ -50,7 +50,7 @@ def index(request):
     return render(request, template_name='index.html', context=context)
 
 
-@login_required
+@login_required(login_url='login')
 def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
@@ -130,13 +130,22 @@ def get_blocked_timeslots(request: Request):
     return Response(blocked_times)
 
 
-def services(request):
-    return render(request, 'service.html', {})
-
-
 def logout_user(request):
     logout(request)
     return redirect('main-view')
+
+
+def login_user(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('notes-view')
+        else:
+            messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
+    return render(request, 'login.html', {})
 
 
 class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
@@ -173,12 +182,12 @@ class NoteViewSet(viewsets.ModelViewSet):
         return NoteGetSerializer
 
 
-@login_required
+@login_required(login_url='login')
 def service(request):
     return render(request, 'service.html', {})
 
 
-@login_required
+@login_required(login_url='login')
 def service_finally(request: WSGIRequest):
     note_pk = request.COOKIES.get('note_pk', '')
     if not note_pk:

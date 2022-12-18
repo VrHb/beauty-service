@@ -18,6 +18,7 @@ urlpatterns = [
     path('', views.index, name='main-view'),
     path('', include(router.urls)),
     path('logout/', views.logout_user, name='logout'),
+    path('login/', views.login_user, name='login-view'),
     path('registration/', views.register_user, name='registration'),
     path('notes/', views.notes, name='notes-view'),
     path('get_blocked_timeslots/', views.get_blocked_timeslots, name='get_blocked_timeslots-api'),
