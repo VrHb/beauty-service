@@ -83,7 +83,7 @@ class Master(models.Model):
     avatar = models.FileField('фото мастера', validators=[validate_svg_file_extension], null=True, blank=True)
     start_experience_date = models.DateField('дата начала рабочего стажа', help_text='для расчета стажа')
     speciality = models.ForeignKey(MasterSpeciality, related_name='masters', on_delete=models.PROTECT)
-    services = models.ManyToManyField(Service)
+    services = models.ManyToManyField(Service, related_name='masters')
 
     @property
     def full_name(self):

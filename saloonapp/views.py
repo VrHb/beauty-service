@@ -14,6 +14,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
+from .filters import MasterFilter
+from .filters import SaloonFilter
+from .filters import ServiceGroupFilter
+from .forms import SignUpUser
 from .models import Note
 from .models import Payment
 from .models import Promo
@@ -30,7 +34,6 @@ from .serializers import PromoSerializer
 from .serializers import SaloonSerializer
 from .serializers import ServiceGroupSerializer
 from .serializers import MasterSerializer
-from .forms import SignUpUser
 
 
 def index(request):
@@ -160,42 +163,8 @@ def login_user(request):
             login(request, user)
             return redirect('service')
         else:
-            messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
+            messages.success(request, 'Неправильный логин или пароль, попробуйте еще!')
     return render(request, 'login.html', {})
-
-
-class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Saloon.objects.all()
-    serializer_class = SaloonSerializer
-
-
-class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
-    serializer_class = ServiceGroupSerializer
-
-
-class MasterViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
-    serializer_class = MasterSerializer
-
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.select_related('user', 'ptype').all()
-    serializer_class = PaymentSerializer
-
-
-class PromoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Promo.objects.all()
-    serializer_class = PromoSerializer
-
-
-class NoteViewSet(viewsets.ModelViewSet):
-    queryset = Note.objects.select_related().all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return NotePostSerializer
-        return NoteGetSerializer
 
 
 @login_required(login_url='login')
@@ -236,3 +205,40 @@ def register_user(request):
     else:
         form = SignUpUser()
     return render(request, 'registration.html', {'form': form})
+
+
+class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Saloon.objects.all()
+    serializer_class = SaloonSerializer
+    filterset_class = SaloonFilter
+
+
+class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
+    serializer_class = ServiceGroupSerializer
+    filterset_class = ServiceGroupFilter
+
+
+class MasterViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
+    serializer_class = MasterSerializer
+    filterset_class = MasterFilter
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related('user', 'ptype').all()
+    serializer_class = PaymentSerializer
+
+
+class PromoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Promo.objects.all()
+    serializer_class = PromoSerializer
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.select_related().all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return NotePostSerializer
+        return NoteGetSerializer

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'debug_toolbar',
     'rest_framework',
+    'django_filters',
     'userapp',
     'saloonapp',
 ]
@@ -84,6 +85,12 @@ STATICFILES_DIRS = [
 STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_DIR_NAME'))
 
 WSGI_APPLICATION = 'beauty_city.wsgi.application'
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
