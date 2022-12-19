@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -80,6 +81,10 @@ def get_blocked_timeslots(request: Request):
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
+    # На прошлое записей нет
+    if serializer.validated_data['date'] < timezone.now().date():
+        return Response(timeslots)
+
     # составим фильтры для записей и для рабочих дней мастеров в салонах
     # если у записи нет платежа, то она еще не подтверждена и это время свободно
     note_filters = {'date': serializer.validated_data['date'], 'payment__isnull': False}
@@ -126,7 +131,18 @@ def get_blocked_timeslots(request: Request):
     note_stimes = note_stimes.values('stime').annotate(cnt=Count('stime'))
     for note_stime in note_stimes:
         if note_stime['cnt'] >= len(combs):
-            blocked_times.append(str(note_stime['stime'])[:-3])
+            time_in_hour_minute_format = str(note_stime['stime'])[:-3]
+            blocked_times.append(time_in_hour_minute_format)
+
+    # добавим прошедшие на сегодня времена
+    is_today = serializer.validated_data['date'] == timezone.now().date()
+    if is_today:
+        for timeslot in timeslots:
+            not_added_yet = timeslot not in blocked_times
+            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now()
+            if not_added_yet and time_past:
+                blocked_times.append(timeslot)
+
     return Response(blocked_times)
 
 
