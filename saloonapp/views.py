@@ -8,6 +8,7 @@ from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
@@ -257,7 +258,7 @@ class MasterViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = MasterFilter
 
 
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.select_related('user', 'ptype').all()
     serializer_class = PaymentSerializer
 
@@ -269,6 +270,11 @@ class PromoViewSet(viewsets.ReadOnlyModelViewSet):
 
 class NoteViewSet(viewsets.ModelViewSet):
     queryset = Note.objects.select_related().all()
+
+    def has_permission(self, request, view):
+        if request.method == 'POST':
+            return request.user.is_authenticated()
+        return True
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

@@ -32,7 +32,7 @@
               <div class="serviceFinally__form_content">
                 <div class="serviceFinally__form_content__block fic">
                   <div class="serviceFinally__form_content__title">{{ note.service.name }}</div>
-                  <div class="serviceFinally__form_content__price">{{ note.price }} ₽</div>
+                  <div class="serviceFinally__form_content__price">{{ note.price|floatformat:'0' }} ₽</div>
                 </div>
                 <div class="serviceFinally__form_content__block fic">
                   <div class="serviceFinally__form_content__items fic">
