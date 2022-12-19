@@ -12,22 +12,12 @@ from .validators import validate_svg_file_extension
 User = get_user_model()
 
 
-# index: as is
 class Saloon(models.Model):
     name = models.CharField('название', max_length=100)
     address = models.CharField('адрес', max_length=200)
     city = models.CharField('город', max_length=100)
     avatar = models.FileField('заглавное фото салона', validators=[validate_svg_file_extension], null=True, blank=True)
     masters = models.ManyToManyField('Master', through='SaloonMaster')
-
-    def to_dict(self):
-        return {
-            'pk': self.pk,
-            'name': self.name,
-            'address': self.address,
-            'city': self.city,
-            'avatar': self.avatar.url,
-        }
 
     class Meta:
         verbose_name = 'салон красоты'
@@ -49,8 +39,6 @@ class ServiceGroup(models.Model):
         return self.name
 
 
-# index: as is
-# service filter: через ServiceGroup
 class Service(models.Model):
     name = models.CharField('название', max_length=200)
     avatar = models.FileField('заглавное фото услуги', validators=[validate_svg_file_extension], null=True, blank=True)
@@ -81,8 +69,6 @@ class MasterSpeciality(models.Model):
         return self.name
 
 
-# index: as is
-# service filter: as is
 class Master(models.Model):
     first_name = models.CharField('имя мастера', max_length=100)  # if no user
     last_name = models.CharField('фамилия мастера', max_length=100)  # if no user
@@ -98,19 +84,6 @@ class Master(models.Model):
     start_experience_date = models.DateField('дата начала рабочего стажа', help_text='для расчета стажа')
     speciality = models.ForeignKey(MasterSpeciality, related_name='masters', on_delete=models.PROTECT)
     services = models.ManyToManyField(Service)
-
-    def to_dict(self):
-        return {
-            'pk': self.pk,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'rating_image': self.rating_image.url,
-            'review_count': self.review_count,
-            'avatar': self.avatar.url,
-            'start_experience_date': self.start_experience_date,
-            'speciality': self.speciality.name,
-            # 'services': self.services.all().values_list('pk', flat=True),
-        }
 
     @property
     def full_name(self):
@@ -249,9 +222,6 @@ class Note(models.Model):
     service = models.ForeignKey(Service, related_name='notes', on_delete=models.DO_NOTHING)
     master = models.ForeignKey(Master, related_name='notes', on_delete=models.DO_NOTHING)
     payment = models.OneToOneField(Payment, on_delete=models.DO_NOTHING, null=True)
-    # TODO: Для отображения цен со скидкой (например 50% для первой) нужно сделать
-    # менеджер, который подтянет с актуальными ценами для юзера.
-    # На вход менеждеру промокод
     price = models.DecimalField('цена без промо', max_digits=7, decimal_places=2, validators=[MinValueValidator(0)])
     promo = models.ForeignKey(
         Promo,
