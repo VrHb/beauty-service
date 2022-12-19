@@ -94,10 +94,12 @@
               <button class="header__block_btn">Позвонить нам</button>
             </a>
             {% if request.user.is_anonymous %}
+            <a href="{% url 'notes-view' %}">
             <div class="header__block_auth">
               <img src="{% static 'img/acc.svg' %}" alt="account" class="header__account_img">
               <span class="header__block_auth__intro">Войти</span>
             </div>
+            </a>
             {% else %}
             {{ request.user.id|json_script:"user_id" }}
             {% url 'service_finally' as service_finally_url_var %}
@@ -190,9 +192,6 @@
     </div>
   </div>
 </footer>
-
-{% block popup %}
-{% endblock %}
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
           integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="

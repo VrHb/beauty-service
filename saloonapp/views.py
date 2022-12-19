@@ -142,7 +142,7 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('notes-view')
+            return redirect('service')
         else:
             messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
     return render(request, 'login.html', {})
