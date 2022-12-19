@@ -142,7 +142,7 @@ def get_blocked_timeslots(request: Request):
     if is_today:
         for timeslot in timeslots:
             not_added_yet = timeslot not in blocked_times
-            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now()
+            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now().time()
             if not_added_yet and time_past:
                 blocked_times.append(timeslot)
 
@@ -178,6 +178,12 @@ def service_finally(request: WSGIRequest):
     if not note_pk:
         return redirect('service')
     note = Note.objects.get(pk=note_pk)
+    # ищем, нет ли такой же записи, но уже подтвержденной
+    same_booked_note = Note.objects.filter(
+        date=note.date, stime=note.stime, master=note.master, payment__isnull=False)
+    if same_booked_note:
+        # TODO: редирект на отдельную страницу тип "извините, уже кто-то другой записался"
+        return redirect('service')
     if request.method == 'GET':
         return render(request, 'serviceFinally.html', {'note': note})
     with transaction.atomic():

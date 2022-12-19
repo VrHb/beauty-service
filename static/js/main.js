@@ -133,11 +133,11 @@ $(document).ready(function() {
         if (servicePk != '0') params.service = servicePk;
         var key = `${masterPk}-${servicePk}`;
         if (key in cache.saloons) {
-            showSaloons(cache.saloons.key);
+            showSaloons(cache.saloons[key]);
         } else {
             $.get('/saloons', params, function(data){
                 showSaloons(data);
-                cache.saloons.key = data;
+                cache.saloons[key] = data;
             });
         }
     };
@@ -149,12 +149,12 @@ $(document).ready(function() {
         if (masterPk != '0') params.master = masterPk;
         if (saloonPk != '0') params.saloon = saloonPk;
         var key = `${masterPk}-${saloonPk}`;
-        if (key in cache.saloons) {
-            showServices(cache.saloons.key);
+        if (key in cache.services) {
+            showServices(cache.services[key]);
         } else {
             $.get('/service_groups', params, function(data){
                 showServices(data);
-                cache.services.key = data;
+                cache.services[key] = data;
             });
         }
     };
@@ -167,11 +167,11 @@ $(document).ready(function() {
         if (servicePk != '0') params.service = servicePk;
         var key = `${saloonPk}-${servicePk}`;
         if (key in cache.masters) {
-            showMasters(cache.masters.key);
+            showMasters(cache.masters[key]);
         } else {
             $.get('/masters', params, function(data){
                 showMasters(data);
-                cache.masters.key = data;
+                cache.masters[key] = data;
             });
         }
     };
@@ -190,7 +190,6 @@ $(document).ready(function() {
         var dateCell = $('.air-datepicker-body--cells .-selected-');
         if (!dateCell.length) {
             var dateCell = $('.air-datepicker-body--cells .-current-');
-            $(dateCell).addClass('.-selected-');
         };
         // В datepicker месяц с 0
         var month = parseInt(dateCell.attr('data-month')) + 1;
@@ -517,7 +516,10 @@ $(document).ready(function() {
 	function postNote(){
 	    var servicePk = $('.service__services button').attr('data-pk');
         var price;
-        cache.serviceGroups.forEach(function(serviceGroup){
+        var masterPk = $('.service__masters button').attr('data-pk');
+        var saloonPk = $('.service__salons button').attr('data-pk');
+        var key = `${masterPk}-${saloonPk}`;
+        cache.services[key].forEach(function(serviceGroup){
             serviceGroup.services.forEach(function(service){
                 if (String(servicePk) == String(service.pk)) {
                     price = service.price;
