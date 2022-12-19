@@ -1,5 +1,6 @@
 Django==3.2.16
 djangorestframework==3.14.0
+django-filter==22.1
 django-phonenumber-field==7.0.1
 environs==9.5.0
 phonenumbers==8.13.2

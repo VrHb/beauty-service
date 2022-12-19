@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -13,6 +14,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
 
+from .filters import MasterFilter
+from .filters import SaloonFilter
+from .filters import ServiceFilter
+from .filters import ServiceGroupFilter
+from .forms import SignUpUser
 from .models import Note
 from .models import Payment
 from .models import Promo
@@ -27,9 +33,10 @@ from .serializers import NotePostSerializer
 from .serializers import PaymentSerializer
 from .serializers import PromoSerializer
 from .serializers import SaloonSerializer
+from .serializers import ServiceSerializer
 from .serializers import ServiceGroupSerializer
+from .serializers import ServiceSpecialPriceSerializer
 from .serializers import MasterSerializer
-from .forms import SignUpUser
 
 
 def index(request):
@@ -80,6 +87,10 @@ def get_blocked_timeslots(request: Request):
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
+    # На прошлое записей нет
+    if serializer.validated_data['date'] < timezone.now().date():
+        return Response(timeslots)
+
     # составим фильтры для записей и для рабочих дней мастеров в салонах
     # если у записи нет платежа, то она еще не подтверждена и это время свободно
     note_filters = {'date': serializer.validated_data['date'], 'payment__isnull': False}
@@ -126,7 +137,18 @@ def get_blocked_timeslots(request: Request):
     note_stimes = note_stimes.values('stime').annotate(cnt=Count('stime'))
     for note_stime in note_stimes:
         if note_stime['cnt'] >= len(combs):
-            blocked_times.append(str(note_stime['stime'])[:-3])
+            time_in_hour_minute_format = str(note_stime['stime'])[:-3]
+            blocked_times.append(time_in_hour_minute_format)
+
+    # добавим прошедшие на сегодня времена
+    is_today = serializer.validated_data['date'] == timezone.now().date()
+    if is_today:
+        for timeslot in timeslots:
+            not_added_yet = timeslot not in blocked_times
+            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now().time()
+            if not_added_yet and time_past:
+                blocked_times.append(timeslot)
+
     return Response(blocked_times)
 
 
@@ -144,42 +166,8 @@ def login_user(request):
             login(request, user)
             return redirect('service')
         else:
-            messages.success(request, 'Непральвильный логин или пароль, попробуйте еще!')
+            messages.success(request, 'Неправильный логин или пароль, попробуйте еще!')
     return render(request, 'login.html', {})
-
-
-class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Saloon.objects.all()
-    serializer_class = SaloonSerializer
-
-
-class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
-    serializer_class = ServiceGroupSerializer
-
-
-class MasterViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
-    serializer_class = MasterSerializer
-
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.select_related('user', 'ptype').all()
-    serializer_class = PaymentSerializer
-
-
-class PromoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Promo.objects.all()
-    serializer_class = PromoSerializer
-
-
-class NoteViewSet(viewsets.ModelViewSet):
-    queryset = Note.objects.select_related().all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return NotePostSerializer
-        return NoteGetSerializer
 
 
 @login_required(login_url='login')
@@ -193,6 +181,12 @@ def service_finally(request: WSGIRequest):
     if not note_pk:
         return redirect('service')
     note = Note.objects.get(pk=note_pk)
+    # ищем, нет ли такой же записи, но уже подтвержденной
+    same_booked_note = Note.objects.filter(
+        date=note.date, stime=note.stime, master=note.master, payment__isnull=False)
+    if same_booked_note:
+        # TODO: редирект на отдельную страницу тип "извините, уже кто-то другой записался"
+        return redirect('service')
     if request.method == 'GET':
         return render(request, 'serviceFinally.html', {'note': note})
     with transaction.atomic():
@@ -220,3 +214,54 @@ def register_user(request):
     else:
         form = SignUpUser()
     return render(request, 'registration.html', {'form': form})
+
+
+class SaloonViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Saloon.objects.all()
+    serializer_class = SaloonSerializer
+    filterset_class = SaloonFilter
+
+
+class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
+    serializer_class = ServiceGroupSerializer
+    filterset_class = ServiceGroupFilter
+
+
+class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSpecialPriceSerializer
+    filterset_class = ServiceFilter
+
+    def get_serializer_context(self):
+        """Adds request to the context of serializer"""
+        if self.request.user.is_anonymous:
+            has_notes = False
+        else:
+            has_notes = self.request.user.notes.filter(payment__isnull=True).count() > 0
+        return {'has_notes': has_notes}
+
+
+class MasterViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Master.objects.select_related('speciality').prefetch_related('services').all()
+    serializer_class = MasterSerializer
+    filterset_class = MasterFilter
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related('user', 'ptype').all()
+    serializer_class = PaymentSerializer
+
+
+class PromoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Promo.objects.all()
+    serializer_class = PromoSerializer
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.select_related().all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return NotePostSerializer
+        return NoteGetSerializer

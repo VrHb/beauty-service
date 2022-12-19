@@ -83,8 +83,9 @@ class="servicePage"
       <div class="time__btns">
         <div class="row">
           <div class="col-md-12">
+            {% csrf_token %}
             <button class="time__btns_next">Далее</button>
-            <button class="time__btns_home">На главную</button>
+            <button class="time__btns_home" onclick="location.href='{% url 'main-view' %}'">На главную</button>
           </div>
         </div>
       </div>
