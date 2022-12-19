@@ -47,16 +47,39 @@ $(document).ready(function() {
         var servicePk = $('.service__services button').attr('data-pk');
         var nowServiceInData = false;
         var groupElements = [];
-        $.each(data, function(groupIndex, group){
+        var groups = [];
+        var groups2 = [];
+        $.each(data, function(index, item){
+            if (!groups2.includes(item.group.name)) {
+                groups.push({name: item.group.name, elements: []});
+                groups2.push(item.group.name);
+            }
+        });
+        var groupServices = [];
+        $.each(data, function(index, item){
+            groups.forEach(function(group, groupIndex) {
+                if (item.group.name == group.name) {
+                    group.elements.push(item);
+                };
+                groups[groupIndex] = group;
+            });
+        });
+
+        groups.forEach(function(group, groupIndex) {
+            groupServices.push(group);
+        });
+
+
+        $.each(groupServices, function(groupIndex, group){
             var serviceElements = [];
-            $.each(group.services, function(serviceIndex, service){
+            $.each(group.elements, function(serviceIndex, service){
                 if (servicePk == service.pk){
                     nowServiceInData = true;
                 }
                 var element = `
                 <div class="accordion__block_item fic" data-pk="${service.pk}">
                     <div class="accordion__block_item_intro">${service.name}</div>
-                    <div class="accordion__block_item_address">${service.price} ₽</div>
+                    <div class="accordion__block_item_address">${service.special_price} ₽</div>
                 </div>`;
                 serviceElements.push(element);
             });
@@ -64,10 +87,32 @@ $(document).ready(function() {
             var groupHTML = `
             <button class="accordion">${group.name}</button>
 			<div class="panel">
-			  <div class="accordion__block_items" data-pk="${group.pk}">${serviceElementsHTML}</div>
+			  <div class="accordion__block_items">${serviceElementsHTML}</div>
 			</div>`;
 			groupElements.push(groupHTML);
         });
+
+//        $.each(data, function(groupIndex, group){
+//            var serviceElements = [];
+//            $.each(group.services, function(serviceIndex, service){
+//                if (servicePk == service.pk){
+//                    nowServiceInData = true;
+//                }
+//                var element = `
+//                <div class="accordion__block_item fic" data-pk="${service.pk}">
+//                    <div class="accordion__block_item_intro">${service.name}</div>
+//                    <div class="accordion__block_item_address">${service.price} ₽</div>
+//                </div>`;
+//                serviceElements.push(element);
+//            });
+//            var serviceElementsHTML = serviceElements.join('');
+//            var groupHTML = `
+//            <button class="accordion">${group.name}</button>
+//			<div class="panel">
+//			  <div class="accordion__block_items" data-pk="${group.pk}">${serviceElementsHTML}</div>
+//			</div>`;
+//			groupElements.push(groupHTML);
+//        });
         $('.service__services .panel').html(groupElements.join(''));
 
         $('.service__services .panel .accordion').each(function(i, el){
@@ -152,7 +197,7 @@ $(document).ready(function() {
         if (key in cache.services) {
             showServices(cache.services[key]);
         } else {
-            $.get('/service_groups', params, function(data){
+            $.get('/services', params, function(data){
                 showServices(data);
                 cache.services[key] = data;
             });
@@ -519,12 +564,10 @@ $(document).ready(function() {
         var masterPk = $('.service__masters button').attr('data-pk');
         var saloonPk = $('.service__salons button').attr('data-pk');
         var key = `${masterPk}-${saloonPk}`;
-        cache.services[key].forEach(function(serviceGroup){
-            serviceGroup.services.forEach(function(service){
-                if (String(servicePk) == String(service.pk)) {
-                    price = service.price;
-                };
-            });
+        cache.services[key].forEach(function(service){
+            if (String(servicePk) == String(service.pk)) {
+                price = service.special_price;
+            }
         });
         var date = get_picked_filters().filters.date;
         var noteParams = {

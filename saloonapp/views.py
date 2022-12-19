@@ -16,6 +16,7 @@ from django.shortcuts import render, redirect
 
 from .filters import MasterFilter
 from .filters import SaloonFilter
+from .filters import ServiceFilter
 from .filters import ServiceGroupFilter
 from .forms import SignUpUser
 from .models import Note
@@ -32,7 +33,9 @@ from .serializers import NotePostSerializer
 from .serializers import PaymentSerializer
 from .serializers import PromoSerializer
 from .serializers import SaloonSerializer
+from .serializers import ServiceSerializer
 from .serializers import ServiceGroupSerializer
+from .serializers import ServiceSpecialPriceSerializer
 from .serializers import MasterSerializer
 
 
@@ -223,6 +226,20 @@ class ServiceGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ServiceGroup.objects.prefetch_related('services').order_by('order').distinct()
     serializer_class = ServiceGroupSerializer
     filterset_class = ServiceGroupFilter
+
+
+class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSpecialPriceSerializer
+    filterset_class = ServiceFilter
+
+    def get_serializer_context(self):
+        """Adds request to the context of serializer"""
+        if self.request.user.is_anonymous:
+            has_notes = False
+        else:
+            has_notes = self.request.user.notes.filter(payment__isnull=True).count() > 0
+        return {'has_notes': has_notes}
 
 
 class MasterViewSet(viewsets.ReadOnlyModelViewSet):

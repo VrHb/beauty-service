@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -37,6 +38,31 @@ class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = ['pk', 'name', 'price']
+
+
+class ServiceGroupGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceGroup
+        fields = ['pk', 'name']
+
+
+class ServiceSpecialPriceSerializer(serializers.ModelSerializer):
+    group = ServiceGroupGetSerializer()
+    special_price = serializers.SerializerMethodField()
+
+    def get_special_price(self, obj):
+        # TODO: как-то нормальнее в модели занести, но через менеджер не получилось в сериалайзер пробросить
+        first_note_ratio = Decimal(0.5)
+        common_price = obj.price
+        special_price = obj.price * first_note_ratio
+        has_notes = self.context.get('has_notes')
+        if has_notes:
+            return common_price
+        return special_price
+
+    class Meta:
+        model = Service
+        fields = ['pk', 'name', 'price', 'group', 'special_price']
 
 
 class ServiceGroupSerializer(serializers.ModelSerializer):
