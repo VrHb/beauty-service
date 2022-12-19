@@ -15,16 +15,19 @@ $(document).ready(function() {
         document.cookie = name + "=" + (value || "")  + expires + "; path=/";
     };
 
-    var cache = {blocked: {}};
+    var cache = {blocked: {}, saloons: {}, services: {}, masters: {}};
     const user_id = JSON.parse(document.getElementById('user_id').textContent);
     const service_finally_url = JSON.parse(document.getElementById('service_finally_url').textContent);
     const service_url = JSON.parse(document.getElementById('service_url').textContent);
 
-    $('.service__salons button').attr('data-pk', '0');
-    $('.service__salons .panel').text('');
-    $.get('/saloons', function(data){
+    function showSaloons(data) {
+        var saloonPk = $('.service__salons button').attr('data-pk');
+        var nowSaloonInData = false;
         var elements = [];
         $.each(data, function(index, item){
+            if (saloonPk == item.pk){
+                nowSaloonInData = true;
+            }
             var element = `
             <div class="accordion__block fic" data-pk="${item.pk}">
               <div class="accordion__block_intro">${item.name}</div>
@@ -33,16 +36,23 @@ $(document).ready(function() {
             elements.push(element);
         });
         $('.service__salons .panel').html(elements.join(''));
-        cache.saloons = data;
-    });
+        if (!nowSaloonInData && (saloonPk != '0')){
+            $('.service__salons button').text('(Выберите салон)');
+            $('.service__salons button').attr('data-pk', '0');
+            $('.service__salons button').removeClass('selected');
+        }
+    }
 
-    $('.service__services button').attr('data-pk', '0');
-    $('.service__services .panel').html('');
-    $.get('/service_groups', function(data){
+    function showServices(data) {
+        var servicePk = $('.service__services button').attr('data-pk');
+        var nowServiceInData = false;
         var groupElements = [];
         $.each(data, function(groupIndex, group){
             var serviceElements = [];
             $.each(group.services, function(serviceIndex, service){
+                if (servicePk == service.pk){
+                    nowServiceInData = true;
+                }
                 var element = `
                 <div class="accordion__block_item fic" data-pk="${service.pk}">
                     <div class="accordion__block_item_intro">${service.name}</div>
@@ -59,7 +69,6 @@ $(document).ready(function() {
 			groupElements.push(groupHTML);
         });
         $('.service__services .panel').html(groupElements.join(''));
-        cache.serviceGroups = data;
 
         $('.service__services .panel .accordion').each(function(i, el){
             $(el).click(function(e){
@@ -82,13 +91,22 @@ $(document).ready(function() {
 			    $(this).parent().parent().parent().parent().find('> button.active').click()
 		    }, 200)
 	    })
-    });
 
-    $('.service__masters button').attr('data-pk', '0');
-    $('.service__masters .panel').text('');
-    $.get('/masters', function(data){
+	    if (!nowServiceInData && (servicePk != '0')){
+            $('.service__services button').text('(Выберите услугу)');
+            $('.service__services button').attr('data-pk', '0');
+            $('.service__services button').removeClass('selected');
+        }
+    }
+
+    function showMasters(data) {
+        var masterPk = $('.service__masters button').attr('data-pk');
+        var nowMasterInData = false;
         var elements = [];
         $.each(data, function(index, item){
+            if (masterPk == item.pk){
+                nowMasterInData = true;
+            }
             var element = `
             <div class="accordion__block fic" data-pk="${item.pk}">
               <div class="accordion__block_elems fic">
@@ -100,8 +118,72 @@ $(document).ready(function() {
             elements.push(element);
         });
         $('.service__masters .panel').html(elements.join(''));
-        cache.saloons = data;
-    });
+        if (!nowMasterInData && (masterPk != '0')){
+            $('.service__masters button').text('(Выберите мастера)');
+            $('.service__masters button').attr('data-pk', '0');
+            $('.service__masters button').removeClass('selected');
+        }
+    }
+
+    function updateSaloons() {
+        var params = {}
+        var masterPk = $('.service__masters button').attr('data-pk');
+        var servicePk = $('.service__services button').attr('data-pk');
+        if (masterPk != '0') params.master = masterPk;
+        if (servicePk != '0') params.service = servicePk;
+        var key = `${masterPk}-${servicePk}`;
+        if (key in cache.saloons) {
+            showSaloons(cache.saloons.key);
+        } else {
+            $.get('/saloons', params, function(data){
+                showSaloons(data);
+                cache.saloons.key = data;
+            });
+        }
+    };
+
+    function updateServices() {
+        var params = {}
+        var masterPk = $('.service__masters button').attr('data-pk');
+        var saloonPk = $('.service__salons button').attr('data-pk');
+        if (masterPk != '0') params.master = masterPk;
+        if (saloonPk != '0') params.saloon = saloonPk;
+        var key = `${masterPk}-${saloonPk}`;
+        if (key in cache.saloons) {
+            showServices(cache.saloons.key);
+        } else {
+            $.get('/service_groups', params, function(data){
+                showServices(data);
+                cache.services.key = data;
+            });
+        }
+    };
+
+    function updateMasters() {
+        var params = {}
+        var saloonPk = $('.service__salons button').attr('data-pk');
+        var servicePk = $('.service__services button').attr('data-pk');
+        if (saloonPk != '0') params.saloon = saloonPk;
+        if (servicePk != '0') params.service = servicePk;
+        var key = `${saloonPk}-${servicePk}`;
+        if (key in cache.masters) {
+            showMasters(cache.masters.key);
+        } else {
+            $.get('/masters', params, function(data){
+                showMasters(data);
+                cache.masters.key = data;
+            });
+        }
+    };
+
+    $('.service__salons button').attr('data-pk', '0');
+    updateSaloons();
+
+    $('.service__services button').attr('data-pk', '0');
+    updateServices();
+
+    $('.service__masters button').attr('data-pk', '0');
+    updateMasters();
 
     function get_picked_filters(){
         var result = {filters: {}};
@@ -198,6 +280,12 @@ $(document).ready(function() {
 		$(this).parent().parent().find('.accordion').attr('data-pk', $(this).attr('data-pk'));
 
 		updateCalendar();
+		updateServices();
+		if ($(this).parent().parent().hasClass('service__salons')){
+		    updateMasters();
+		} else {
+		    updateSaloons();
+		}
 
 		$(this).parent().parent().find('> button.active').addClass('selected').text(thisName + '  ' +thisAddress)
 		setTimeout(() => {
@@ -214,11 +302,13 @@ $(document).ready(function() {
 		$(this).parent().parent().parent().parent().find('.accordion').attr('data-pk', $(this).attr('data-pk'));
 
 		updateCalendar();
+		updateSaloons();
+		updateMasters();
 
 		$(this).parent().parent().find('> button.active').addClass('selected').text(thisName + '  ' +thisAddress)
 		setTimeout(() => {
 			$(this).parent().parent().parent().find('> button.active').click()
-		}, 200)
+		}, 200);
 	});
 
 	$('.serviceFinallys__form_back').click(function(e) {

@@ -25,7 +25,7 @@ class SaloonFilter(filters.FilterSet):
 
 class ServiceGroupFilter(filters.FilterSet):
     master = filters.NumberFilter(field_name='services__masters__pk', label='master')
-    saloon = filters.NumberFilter(field_name='services__masters__saloons__pk', label='saloon')
+    saloon = filters.NumberFilter(field_name='services__masters__saloonlinks__saloon__pk', label='saloon')
 
     class Meta:
         model = ServiceGroup
