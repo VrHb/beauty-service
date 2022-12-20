@@ -127,6 +127,7 @@ class NoteGetSerializer(serializers.ModelSerializer):
 
 class NotePostSerializer(serializers.ModelSerializer):
     # TODO: проверка записи на это время у этого мастера
+    etime = serializers.TimeField(required=False)
     class Meta:
         model = Note
         fields = [

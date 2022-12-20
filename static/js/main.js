@@ -16,9 +16,16 @@ $(document).ready(function() {
     };
 
     var cache = {blocked: {}, saloons: {}, services: {}, masters: {}};
-    const user_id = JSON.parse(document.getElementById('user_id').textContent);
-    const service_finally_url = JSON.parse(document.getElementById('service_finally_url').textContent);
-    const service_url = JSON.parse(document.getElementById('service_url').textContent);
+    var userElement = document.getElementById('user_id');
+
+    var user_id;
+    var service_finally_url;
+    var service_url;
+    if (userElement) {
+        user_id = JSON.parse(document.getElementById('user_id').textContent);
+        service_finally_url = JSON.parse(document.getElementById('service_finally_url').textContent);
+        service_url = JSON.parse(document.getElementById('service_url').textContent);
+    }
 
     function showSaloons(data) {
         var saloonPk = $('.service__salons button').attr('data-pk');
@@ -92,27 +99,6 @@ $(document).ready(function() {
 			groupElements.push(groupHTML);
         });
 
-//        $.each(data, function(groupIndex, group){
-//            var serviceElements = [];
-//            $.each(group.services, function(serviceIndex, service){
-//                if (servicePk == service.pk){
-//                    nowServiceInData = true;
-//                }
-//                var element = `
-//                <div class="accordion__block_item fic" data-pk="${service.pk}">
-//                    <div class="accordion__block_item_intro">${service.name}</div>
-//                    <div class="accordion__block_item_address">${service.price} ₽</div>
-//                </div>`;
-//                serviceElements.push(element);
-//            });
-//            var serviceElementsHTML = serviceElements.join('');
-//            var groupHTML = `
-//            <button class="accordion">${group.name}</button>
-//			<div class="panel">
-//			  <div class="accordion__block_items" data-pk="${group.pk}">${serviceElementsHTML}</div>
-//			</div>`;
-//			groupElements.push(groupHTML);
-//        });
         $('.service__services .panel').html(groupElements.join(''));
 
         $('.service__services .panel .accordion').each(function(i, el){
@@ -355,15 +341,6 @@ $(document).ready(function() {
 		}, 200);
 	});
 
-	$('.serviceFinallys__form_back').click(function(e) {
-		e.preventDefault();
-		window.location.href = service_url;
-	});
-
-	$('.serviceFinallys__form_btn').submit(function(){
-        var expiresThroughSeconds = 60 * 1; // 1 minute
-        setCookie('note_pk', $('.serviceFinally__form_header__number').attr('data-pk'), expiresThroughSeconds);
-    });
     //////////////////////////////////////////////////////
 
 	$('.salonsSlider').slick({

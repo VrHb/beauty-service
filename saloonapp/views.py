@@ -8,6 +8,7 @@ from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
@@ -33,7 +34,6 @@ from .serializers import NotePostSerializer
 from .serializers import PaymentSerializer
 from .serializers import PromoSerializer
 from .serializers import SaloonSerializer
-from .serializers import ServiceSerializer
 from .serializers import ServiceGroupSerializer
 from .serializers import ServiceSpecialPriceSerializer
 from .serializers import MasterSerializer
@@ -62,7 +62,7 @@ def notes(request):
     user = request.user
     notes = Note.objects.with_dt().select_related(
         'saloon', 'service', 'master', 'payment', 'promo'
-    ).filter(user=user, payment__isnull=False).order_by('-dt')
+    ).filter(user=user).exclude(payment__isnull=True).order_by('-dt')
     active_notes = notes.filter(dt__gt=timezone.now())
     past_notes = notes.filter(dt__lte=timezone.now())
     total_price = Decimal(0)
@@ -87,6 +87,15 @@ def get_blocked_timeslots(request: Request):
     serializer.is_valid(raise_exception=True)
     timeslots = [f'{t}:00' for t in range(10, 21)]
 
+    # уже недоступное время
+    is_today = serializer.validated_data['date'] == timezone.now().date()
+    blocked_init = []
+    if is_today:
+        for timeslot in timeslots:
+            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now().time()
+            if time_past:
+                blocked_init.append(timeslot)
+
     # На прошлое записей нет
     if serializer.validated_data['date'] < timezone.now().date():
         return Response(timeslots)
@@ -97,11 +106,13 @@ def get_blocked_timeslots(request: Request):
     saloon_master_filters = {'isoweekday': note_filters['date'].isoweekday()}
     for key in ['saloon', 'service', 'master']:
         if key in serializer.validated_data:
-            note_filters[f'{key}__pk'] = serializer.validated_data[key]
             if key == 'service':
+                # Для note_filters сейчас не добавляем в
+                # фильтры, т.к. нам не важно, по какой услуге на это время запись
                 saloon_master_filters['saloonmaster__master__services__pk__in'] = [serializer.validated_data[key]]
             else:
                 saloon_master_filters[f'saloonmaster__{key}__pk'] = serializer.validated_data[key]
+                note_filters[f'{key}__pk'] = serializer.validated_data[key]
 
     # если нет рабочих дней у мастеров в салонах по фильтрам, то все занято
     saloon_master_day_items = SaloonMasterWeekday.objects.filter(**saloon_master_filters)
@@ -109,19 +120,22 @@ def get_blocked_timeslots(request: Request):
         return Response(timeslots)
 
     # если среди фильтров только дата, то пользователь все равно
-    # еще будет делать выбор, поэтому отдадим, что все свободно
+    # еще будет делать выбор, поэтому отдадим, что все свободно кроме прошедшего
     if len(note_filters.keys()) == 1:
-        return Response([])
+        return Response(blocked_init)
 
-    # если нет записей по фильтрам, то все свободно
+    # если нет записей по фильтрам, то все свободно кроме прошедшего
     note_stimes = Note.objects.filter(**note_filters)
     if not note_stimes:
-        return Response([])
+        return Response(blocked_init)
 
     # составляем комбинации [салон, мастер(в котором работает мастер)]
     # услуга в комбинациях не нужна, т.к. мастер не может делать 2 услуги одновременно,
     # но по услуге проверятся, что он вообще делает выбранную или любую, если не выбрана
     combs = set()
+    # фильтр по услугам добавим здесь, т.к. важно знать, оказывается она этим мастером
+    if 'service' in serializer.validated_data:
+        note_filters[f'service__pk'] = serializer.validated_data['service']
     for saloon_master_day_item in saloon_master_day_items:
         saloon_pk = saloon_master_day_item.saloonmaster.saloon.pk
         master_pk = saloon_master_day_item.saloonmaster.master.pk
@@ -141,13 +155,9 @@ def get_blocked_timeslots(request: Request):
             blocked_times.append(time_in_hour_minute_format)
 
     # добавим прошедшие на сегодня времена
-    is_today = serializer.validated_data['date'] == timezone.now().date()
-    if is_today:
-        for timeslot in timeslots:
-            not_added_yet = timeslot not in blocked_times
-            time_past = datetime.time.fromisoformat(timeslot) <= timezone.now().time()
-            if not_added_yet and time_past:
-                blocked_times.append(timeslot)
+    for blocked_init_time in blocked_init:
+        if blocked_init_time not in blocked_times:
+            blocked_times.append(blocked_init_time)
 
     return Response(blocked_times)
 
@@ -238,7 +248,7 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.user.is_anonymous:
             has_notes = False
         else:
-            has_notes = self.request.user.notes.filter(payment__isnull=True).count() > 0
+            has_notes = self.request.user.notes.filter(payment__isnull=False).count() > 0
         return {'has_notes': has_notes}
 
 
@@ -248,7 +258,7 @@ class MasterViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = MasterFilter
 
 
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Payment.objects.select_related('user', 'ptype').all()
     serializer_class = PaymentSerializer
 
@@ -260,6 +270,11 @@ class PromoViewSet(viewsets.ReadOnlyModelViewSet):
 
 class NoteViewSet(viewsets.ModelViewSet):
     queryset = Note.objects.select_related().all()
+
+    def has_permission(self, request, view):
+        if request.method == 'POST':
+            return request.user.is_authenticated()
+        return True
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

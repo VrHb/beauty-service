@@ -1,5 +1,4 @@
 from decimal import Decimal
-from typing import Optional
 
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -219,7 +218,7 @@ class NoteQuerySet(models.QuerySet):
 
 class Note(models.Model):
     user = models.ForeignKey(User, related_name='notes', on_delete=models.DO_NOTHING)
-    saloon = models.ForeignKey(Saloon, related_name='notes', on_delete=models.DO_NOTHING, null=True)
+    saloon = models.ForeignKey(Saloon, related_name='notes', on_delete=models.DO_NOTHING)
     service = models.ForeignKey(Service, related_name='notes', on_delete=models.DO_NOTHING)
     master = models.ForeignKey(Master, related_name='notes', on_delete=models.DO_NOTHING)
     payment = models.OneToOneField(Payment, on_delete=models.DO_NOTHING, null=True)
@@ -232,9 +231,9 @@ class Note(models.Model):
         blank=True
     )
     created_at = models.DateTimeField('дата и время создания записи', default=timezone.now)
-    date = models.DateField('дата записи', null=True)
-    stime = models.TimeField('время начала', null=True)
-    etime = models.TimeField('время окончания', null=True)
+    date = models.DateField('дата записи')
+    stime = models.TimeField('время начала')
+    etime = models.TimeField('время окончания')
 
     objects = NoteQuerySet.as_manager()
 
