@@ -28,9 +28,9 @@ SECRET_KEY = env.str('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', False)
 
-ALLOWED_HOSTS = env.list('HOSTS', [])
+ALLOWED_HOSTS = env.list('HOSTS', ['127.0.0.1', '0.0.0.0'])
 
-INTERNAL_IPS = env.list('INTERNAL_IPS', [])
+INTERNAL_IPS = env.list('INTERNAL_IPS', ['127.0.0.1', '0.0.0.0'])
 
 # Application definition
 
@@ -82,7 +82,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_DIR_NAME'))
+STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_DIR_NAME', 'staticfiles'))
 
 WSGI_APPLICATION = 'beauty_city.wsgi.application'
 
@@ -152,8 +152,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 # saloonapp settings
-WORKDAY_START = env.time('WORKDAY_START')
-WORKDAY_END = env.time('WORKDAY_END')
-if WORKDAY_END < WORKDAY_START:
-    raise ValueError('WORKDAY_END should be less then WORKDAY_START')
-NOTE_INTERVAL_IN_MINUTES = env.int('NOTE_INTERVAL_IN_MINUTES')
+WORKDAY_START_HOUR = env.int('WORKDAY_START', 10)
+WORKDAY_END_HOUR = env.int('WORKDAY_END', 20)
+if WORKDAY_END_HOUR < WORKDAY_START_HOUR:
+    raise ValueError('WORKDAY_END_HOUR should be less then WORKDAY_START_HOUR')

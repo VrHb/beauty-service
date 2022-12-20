@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import transaction
@@ -85,7 +86,9 @@ def notes(request):
 def get_blocked_timeslots(request: Request):
     serializer = BlockedTimeSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)
-    timeslots = [f'{t}:00' for t in range(10, 21)]
+    workday_start_hour = settings.WORKDAY_START_HOUR
+    workday_end_hour = settings.WORKDAY_START_HOUR
+    timeslots = [f'{t}:00' for t in range(workday_start_hour, workday_end_hour + 1)]
 
     # уже недоступное время
     is_today = serializer.validated_data['date'] == timezone.now().date()
@@ -133,8 +136,8 @@ def get_blocked_timeslots(request: Request):
     # услуга в комбинациях не нужна, т.к. мастер не может делать 2 услуги одновременно,
     # но по услуге проверятся, что он вообще делает выбранную или любую, если не выбрана
     combs = set()
-    # фильтр по услугам добавим здесь, т.к. важно знать, оказывается она этим мастером
     if 'service' in serializer.validated_data:
+        # фильтр по услугам добавим здесь, т.к. важно знать, оказывается она этим мастером
         note_filters[f'service__pk'] = serializer.validated_data['service']
     for saloon_master_day_item in saloon_master_day_items:
         saloon_pk = saloon_master_day_item.saloonmaster.saloon.pk
