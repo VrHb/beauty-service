@@ -69,11 +69,10 @@ pip install -r requirements.txt
 
 Определите переменные окружения:
 
-- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на
+- `DJANGO_SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на
   вашем сайте.
 - `DEBUG` — ОПЦИОНАЛЬНО, дебаг-режим. Поставьте `False` или `True`.
-- `ALLOWED_HOSTS` —
-  ОПЦИОНАЛЬНО, [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+- `HOSTS` — ОПЦИОНАЛЬНО, [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
 - `INTERNAL_IPS` —
   ОПЦИОНАЛЬНО, [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#internal-ips)
 - `STATIC_DIR_NAME` —
@@ -85,7 +84,7 @@ pip install -r requirements.txt
   Создать файл `.env` в каталоге `beauty_city/` и положите туда такой код:
 
 ```sh
-SECRET_KEY=django-insecure-0if40nf4nf93n4
+DJANGO_SECRET_KEY=django-insecure-0if40nf4nf93n4
 ```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
@@ -139,6 +138,41 @@ python manage.py runserver
 10. Возможность записи без авторизации по номеру телефона
 11. Более интерактивная обратная связь при неудачных сценариях
 12. Личный кабинет администратора с бизнес-дашбордами и возможностью некоторых настроек не через админку
+
+## Деплой проекта с помощью docker
+
+1. Установите на сервер [docker](https://docs.docker.com/engine/install/) и [docker-compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04)
+2.  Скачайте репозиторий на сервер 
+3. Загрузите файл .env из директории beauty_city на сервер удобным способом или через ssh:
+```sh
+scp beauty_city/.env <user_name>@<server_adress>:<beauty_city dir>
+```
+4. Внутри файла .env:
+* в переменную HOSTS добавьте ip адрес сервера или домен
+* в переменную DEBUG установите значение 0
+5. Запустите сборку контейнера
+```sh
+docker-compose up -d --build
+```
+4. Подготовте django
+```sh
+docker-compose web exec python manage.py migrate;
+docker-compose web exec python manage.py createsuperuser;
+docker-compose web exec python manage.py collectstatic;
+```
+**NB**
+Посмотреть логи можно с помощью:
+```sh
+docker-compose logs -f
+```
+Остановить контейнеры:
+```sh
+docker-compose down -v
+```
+Проверить что контейнеры запустились:
+```sh
+docker ps
+```
 
 ## Цели проекта
 
