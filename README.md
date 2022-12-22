@@ -148,8 +148,8 @@ python manage.py runserver
 scp beauty_city/.env <user_name>@<server_adress>:<beauty_city dir>
 ```
 4. Внутри файла .env:
-* в переменную HOSTS добавьте ip адрес сервера или домен
-* в переменную DEBUG установите значение 0
+* в переменную `HOSTS` добавьте ip адрес сервера или домен
+* в переменную `DEBUG` установите значение `0`
 5. Запустите сборку контейнера
 ```sh
 docker-compose up -d --build
@@ -161,15 +161,15 @@ docker-compose web exec python manage.py createsuperuser;
 docker-compose web exec python manage.py collectstatic;
 ```
 **NB**
-Посмотреть логи можно с помощью:
+* Посмотреть логи можно с помощью:
 ```sh
 docker-compose logs -f
 ```
-Остановить контейнеры:
+* Остановить контейнеры:
 ```sh
 docker-compose down -v
 ```
-Проверить что контейнеры запустились:
+* Проверить что контейнеры запустились:
 ```sh
 docker ps
 ```
