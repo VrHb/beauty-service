@@ -9,6 +9,7 @@ ENV APP_HOME=/home/www/app
 
 RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
+RUN mkdir $APP_HOME/media
 
 WORKDIR $APP_HOME
 
